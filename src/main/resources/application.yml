@@ -8,8 +8,8 @@ spring:
     name: system-adprintops-be
 
   datasource:
-    url: ${DB_URL:jdbc:postgresql://db.kedseyelxebrcwyvpzts.supabase.co:5432/postgres?sslmode=require}
-    username: ${DB_USERNAME:postgres}
+    url: ${DB_URL:jdbc:postgresql://aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres?sslmode=require}
+    username: ${DB_USERNAME:postgres.kedseyelxebrcwyvpzts}
     password: ${DB_PASSWORD:UKZRVcw2OepSKBpj}
     driver-class-name: ${DB_DRIVER:org.postgresql.Driver}
 
