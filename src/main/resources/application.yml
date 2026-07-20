@@ -29,7 +29,7 @@ spring:
     host: smtp.gmail.com
     port: 465
     username: ${GMAIL_USERNAME:gialong.game@gmail.com}
-    password: ${GMAIL_APP_PASSWORD:xgvsgivhxrpjlcsu}
+    password: ${GMAIL_APP_PASSWORD}
     properties:
       mail:
         smtp:
