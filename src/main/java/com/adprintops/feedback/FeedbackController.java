@@ -27,6 +27,23 @@ public class FeedbackController {
         this.mailSender = mailSender;
     }
 
+    @GetMapping("/test-mail")
+    public ResponseEntity<String> testMail() {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, false, "UTF-8");
+            helper.setFrom("gialong.game@gmail.com");
+            helper.setTo(DEFAULT_RECIPIENT);
+            helper.setSubject("[TEST DIRECT MAIL] AdPrintOps Backend");
+            helper.setText("Test direct email sending from Render backend.");
+            mailSender.send(message);
+            return ResponseEntity.ok("SUCCESS: Email sent to " + DEFAULT_RECIPIENT);
+        } catch (Exception e) {
+            log.error("Test mail error: {}", e.getMessage(), e);
+            return ResponseEntity.status(500).body("ERROR: " + e.getClass().getName() + ": " + e.getMessage());
+        }
+    }
+
     @PostMapping
     public ResponseEntity<FeedbackResponse> submitFeedback(@Valid @RequestBody FeedbackRequest request) {
         String targetEmail = (request.recipientEmail() != null && !request.recipientEmail().isBlank())
