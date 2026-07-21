@@ -12,7 +12,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Component
 public class TranhPricingStrategy implements PricingStrategy {
@@ -57,18 +56,16 @@ public class TranhPricingStrategy implements PricingStrategy {
 
             String configKey = rawType.toUpperCase().startsWith("SN_") ? rawType.toUpperCase() : "SN_" + size + "_" + type;
 
-            Optional<PricingConfiguration> configOpt = pricingConfigurationRepository
-                    .findByCategoryCodeAndConfigKeyAndActiveTrue("TRANH", configKey);
+            PricingConfiguration config = pricingConfigurationRepository
+                    .findByCategoryCodeAndConfigKeyAndActiveTrue("TRANH", configKey)
+                    .orElseThrow(() -> new PricingConfigurationException(
+                            "Chưa có cấu hình giá biển số nhà cho tổ hợp " + configKey
+                    ));
 
-            if (configOpt.isEmpty()) {
-                // Fallback for default so_nha key
-                configOpt = pricingConfigurationRepository.findByCategoryCodeAndConfigKeyAndActiveTrue("TRANH", "SN_30X20_ANMON");
-            }
-
-            singleUnitPrice = configOpt.map(PricingConfiguration::getBasePrice).orElse(new BigDecimal("520000")).setScale(0, RoundingMode.HALF_UP);
+            singleUnitPrice = config.getBasePrice().setScale(0, RoundingMode.HALF_UP);
             appliedRules.add("TRANH_" + configKey);
-            lineItems.add(new LineItem("SO_NHA", configOpt.map(PricingConfiguration::getConfigName).orElse("Biển số nhà 3D"), singleUnitPrice));
-            note = "Biển Số Nhà 3D | " + configOpt.map(PricingConfiguration::getConfigName).orElse("Standard 30x20");
+            lineItems.add(new LineItem("SO_NHA", config.getConfigName(), singleUnitPrice));
+            note = "Biển Số Nhà 3D | " + config.getConfigName();
 
         } else {
             // Tranh điện LED: 9 presets x 2 packages (FULL, IN)
@@ -83,17 +80,16 @@ public class TranhPricingStrategy implements PricingStrategy {
                 configKey = "LED_" + preset + "_" + pkg;
             }
 
-            Optional<PricingConfiguration> configOpt = pricingConfigurationRepository
-                    .findByCategoryCodeAndConfigKeyAndActiveTrue("TRANH", configKey);
+            PricingConfiguration config = pricingConfigurationRepository
+                    .findByCategoryCodeAndConfigKeyAndActiveTrue("TRANH", configKey)
+                    .orElseThrow(() -> new PricingConfigurationException(
+                            "Chưa có cấu hình giá tranh điện cho tổ hợp " + configKey
+                    ));
 
-            if (configOpt.isEmpty()) {
-                configOpt = pricingConfigurationRepository.findByCategoryCodeAndConfigKeyAndActiveTrue("TRANH", "LED_A4_FULL");
-            }
-
-            singleUnitPrice = configOpt.map(PricingConfiguration::getBasePrice).orElse(new BigDecimal("790000")).setScale(0, RoundingMode.HALF_UP);
+            singleUnitPrice = config.getBasePrice().setScale(0, RoundingMode.HALF_UP);
             appliedRules.add("TRANH_" + configKey);
-            lineItems.add(new LineItem("TRANH_LED", configOpt.map(PricingConfiguration::getConfigName).orElse("Tranh Điện LED A4 Full"), singleUnitPrice));
-            note = "Tranh Điện LED | " + configOpt.map(PricingConfiguration::getConfigName).orElse("LED A4 Full");
+            lineItems.add(new LineItem("TRANH_LED", config.getConfigName(), singleUnitPrice));
+            note = "Tranh Điện LED | " + config.getConfigName();
         }
 
         BigDecimal totalPrice = singleUnitPrice.multiply(BigDecimal.valueOf(quantity)).setScale(0, RoundingMode.HALF_UP);

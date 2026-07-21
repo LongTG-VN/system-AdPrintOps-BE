@@ -10,4 +10,7 @@ public record ApiError(
         String message,
         Map<String, String> fieldErrors
 ) {
+    public ApiError(String code, String message) {
+        this(Instant.now(), 401, code, message, null);
+    }
 }

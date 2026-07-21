@@ -147,4 +147,40 @@ public class PricingControllerTest {
                 .andExpect(status().isServiceUnavailable())
                 .andExpect(jsonPath("$.code").value("PRICING_CONFIGURATION_UNAVAILABLE"));
     }
+
+    @Test
+    void unifiedPricingRejectsNegativeDimensions() throws Exception {
+        mockMvc.perform(post("/api/v1/pricing/calculate")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "categoryCode": "DECAL",
+                                  "widthM": -1,
+                                  "heightM": 1,
+                                  "quantity": 1,
+                                  "materialCode": "thuong",
+                                  "hasLamination": false
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.fieldErrors.widthM").exists());
+    }
+
+    @Test
+    void unifiedPricingRejectsMissingRequiredDimensions() throws Exception {
+        mockMvc.perform(post("/api/v1/pricing/calculate")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "categoryCode": "DECAL",
+                                  "quantity": 1,
+                                  "materialCode": "thuong",
+                                  "hasLamination": false
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.fieldErrors.categoryInputValid").exists());
+    }
 }

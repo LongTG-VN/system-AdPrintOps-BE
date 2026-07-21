@@ -1,6 +1,6 @@
 package com.adprintops.user;
 
-import com.adprintops.user.dto.UserProfileResponse;
+import com.adprintops.common.ApiError;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,7 +18,10 @@ public class UserController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<UserProfileResponse> getCurrentUser(Authentication authentication) {
+    public ResponseEntity<Object> getCurrentUser(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(401).body(new ApiError("UNAUTHENTICATED", "Yêu cầu đăng nhập"));
+        }
         return ResponseEntity.ok(userService.getProfile(authentication.getName()));
     }
 }

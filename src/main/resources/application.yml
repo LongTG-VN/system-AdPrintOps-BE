@@ -15,7 +15,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     open-in-view: false
     show-sql: false
     properties:
@@ -23,7 +23,11 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
   flyway:
-    enabled: false
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 8
+    validate-on-migrate: true
+    clean-disabled: true
 
   mail:
     host: smtp.gmail.com
@@ -51,7 +55,7 @@ app:
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:*}
   pricing:
-    allow-fallback: ${PRICING_ALLOW_FALLBACK:true}
+    allow-fallback: ${PRICING_ALLOW_FALLBACK:false}
   resend:
     api-key: ${RESEND_API_KEY:}
     from: ${RESEND_FROM:AdPrintOps <onboarding@resend.dev>}

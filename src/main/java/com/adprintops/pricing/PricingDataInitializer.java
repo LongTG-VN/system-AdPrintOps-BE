@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 
 @Component
-@Profile("!test")
+@Profile("dev-seed")
 public class PricingDataInitializer implements CommandLineRunner {
 
     private final PricingRuleRepository pricingRuleRepository;
@@ -32,19 +32,16 @@ public class PricingDataInitializer implements CommandLineRunner {
     public void run(String... args) {
         // Seed default rules if empty
         if (pricingRuleRepository.count() == 0) {
-            pricingRuleRepository.save(new PricingRule("DECAL", "Decal in < 0.5m2", new BigDecimal("0.001"), new BigDecimal("0.500"), new BigDecimal("130000"), BigDecimal.ZERO, true, "Khoán dôi khổ < 0.5m2"));
-            pricingRuleRepository.save(new PricingRule("DECAL", "Decal in < 3m2", new BigDecimal("0.501"), new BigDecimal("3.000"), new BigDecimal("130000"), BigDecimal.ZERO, true, "Decal in 130k"));
-            pricingRuleRepository.save(new PricingRule("DECAL", "Decal in >= 3m2", new BigDecimal("3.001"), new BigDecimal("5.000"), new BigDecimal("110000"), BigDecimal.ZERO, true, "Decal in 110k"));
-            pricingRuleRepository.save(new PricingRule("DECAL", "Decal in >= 5m2", new BigDecimal("5.001"), new BigDecimal("10.000"), new BigDecimal("100000"), BigDecimal.ZERO, true, "Decal in 100k"));
-            pricingRuleRepository.save(new PricingRule("DECAL", "Decal in >= 10m2", new BigDecimal("10.001"), new BigDecimal("15.000"), new BigDecimal("90000"), BigDecimal.ZERO, true, "Decal in 90k"));
-            pricingRuleRepository.save(new PricingRule("DECAL", "Decal in >= 15m2", new BigDecimal("15.001"), new BigDecimal("9999.000"), new BigDecimal("80000"), BigDecimal.ZERO, true, "Decal in 80k"));
+            pricingRuleRepository.save(new PricingRule("DECAL", "Nhỏ lẻ", BigDecimal.ZERO, new BigDecimal("0.100"), new BigDecimal("200000"), new BigDecimal("50000"), true, "Diện tích dưới 0.1m²"));
+            pricingRuleRepository.save(new PricingRule("DECAL", "Khổ nhỏ", new BigDecimal("0.100"), new BigDecimal("1.000"), new BigDecimal("140000"), new BigDecimal("50000"), true, "Diện tích từ 0.1m² đến dưới 1m²"));
+            pricingRuleRepository.save(new PricingRule("DECAL", "Khổ chuẩn", new BigDecimal("1.000"), null, new BigDecimal("120000"), new BigDecimal("50000"), true, "Diện tích từ 1m² trở lên"));
 
             pricingRuleRepository.save(new PricingRule("TEM", "Tem không bế", new BigDecimal("0.001"), new BigDecimal("9999.000"), new BigDecimal("100000"), BigDecimal.ZERO, true, "100k/m2"));
             pricingRuleRepository.save(new PricingRule("CAT", "Cắt decal chuẩn", new BigDecimal("0.001"), new BigDecimal("9999.000"), new BigDecimal("100000"), BigDecimal.ZERO, true, "Cắt viền"));
-            pricingRuleRepository.save(new PricingRule("CARD", "Card Visit 1-4 hộp", new BigDecimal("1.000"), new BigDecimal("4.000"), new BigDecimal("70000"), BigDecimal.ZERO, true, "Card Visit 1-4 hộp (70k/hộp)"));
-            pricingRuleRepository.save(new PricingRule("CARD", "Card Visit tròn 5 hộp", new BigDecimal("5.000"), new BigDecimal("5.000"), new BigDecimal("40000"), BigDecimal.ZERO, true, "Card Visit tròn 5 hộp (40k/hộp)"));
-            pricingRuleRepository.save(new PricingRule("CARD", "Card Visit 6-9 hộp", new BigDecimal("6.000"), new BigDecimal("9.000"), new BigDecimal("70000"), BigDecimal.ZERO, true, "Card Visit 6-9 hộp (70k/hộp)"));
-            pricingRuleRepository.save(new PricingRule("CARD", "Card Visit >=10 hộp", new BigDecimal("10.000"), new BigDecimal("9999.000"), new BigDecimal("24000"), BigDecimal.ZERO, true, "Card Visit >=10 hộp (24k/hộp)"));
+            pricingRuleRepository.save(new PricingRule("CARD", "Card Visit 1-4 hộp", new BigDecimal("1.000"), new BigDecimal("5.000"), new BigDecimal("70000"), BigDecimal.ZERO, true, "Card Visit 1-4 hộp (70k/hộp)"));
+            pricingRuleRepository.save(new PricingRule("CARD", "Card Visit tròn 5 hộp", new BigDecimal("5.000"), new BigDecimal("6.000"), new BigDecimal("40000"), BigDecimal.ZERO, true, "Card Visit tròn 5 hộp (40k/hộp)"));
+            pricingRuleRepository.save(new PricingRule("CARD", "Card Visit 6-9 hộp", new BigDecimal("6.000"), new BigDecimal("10.000"), new BigDecimal("70000"), BigDecimal.ZERO, true, "Card Visit 6-9 hộp (70k/hộp)"));
+            pricingRuleRepository.save(new PricingRule("CARD", "Card Visit >=10 hộp", new BigDecimal("10.000"), null, new BigDecimal("24000"), BigDecimal.ZERO, true, "Card Visit >=10 hộp (24k/hộp)"));
             pricingRuleRepository.save(new PricingRule("HIFLEX", "Bạt Hiflex thường", new BigDecimal("0.001"), new BigDecimal("9999.000"), new BigDecimal("45000"), BigDecimal.ZERO, true, "Hiflex thường"));
         }
 
