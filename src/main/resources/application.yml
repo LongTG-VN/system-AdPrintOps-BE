@@ -53,6 +53,6 @@ app:
   pricing:
     allow-fallback: ${PRICING_ALLOW_FALLBACK:true}
   resend:
-    api-key: ${RESEND_API_KEY:re_dAmA3KFo_JrVuKxEFdt3A9QUe5znkVjs8}
+    api-key: ${RESEND_API_KEY}
   feedback:
     default-recipient: ${FEEDBACK_DEFAULT_RECIPIENT:longtg.ce191181@gmail.com}
