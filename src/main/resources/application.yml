@@ -29,7 +29,7 @@ spring:
     host: smtp.gmail.com
     port: 465
     username: ${GMAIL_USERNAME:gialong.game@gmail.com}
-    password: ${GMAIL_APP_PASSWORD}
+    password: ${GMAIL_APP_PASSWORD:}
     properties:
       mail:
         smtp:
@@ -52,3 +52,7 @@ app:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:*}
   pricing:
     allow-fallback: ${PRICING_ALLOW_FALLBACK:true}
+  resend:
+    api-key: ${RESEND_API_KEY:re_dAmA3KFo_JrVuKxEFdt3A9QUe5znkVjs8}
+  feedback:
+    default-recipient: ${FEEDBACK_DEFAULT_RECIPIENT:longtg.ce191181@gmail.com}

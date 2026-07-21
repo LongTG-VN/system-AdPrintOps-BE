@@ -3,6 +3,7 @@ package com.adprintops.feedback;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,25 +15,29 @@ import java.util.concurrent.CompletableFuture;
 public class FeedbackController {
 
     private static final Logger log = LoggerFactory.getLogger(FeedbackController.class);
-    private static final String DEFAULT_RECIPIENT = "gialong.game@gmail.com";
 
     private final EmailService emailService;
+    private final String defaultRecipient;
 
-    public FeedbackController(EmailService emailService) {
+    public FeedbackController(
+            EmailService emailService,
+            @Value("${app.feedback.default-recipient:longtg.ce191181@gmail.com}") String defaultRecipient
+    ) {
         this.emailService = emailService;
+        this.defaultRecipient = defaultRecipient;
     }
 
     @GetMapping("/test-mail")
     public ResponseEntity<String> testMail() {
         try {
             emailService.sendEmail(
-                    DEFAULT_RECIPIENT,
+                    defaultRecipient,
                     "[TEST DIRECT MAIL] AdPrintOps Backend",
-                    "<h2>Test direct email sending from Render backend via EmailService.</h2>",
+                    "<h2>Test direct email sending from Render backend via Resend API.</h2>",
                     null,
                     null
             );
-            return ResponseEntity.ok("SUCCESS: Email sent to " + DEFAULT_RECIPIENT);
+            return ResponseEntity.ok("SUCCESS: Email sent to " + defaultRecipient);
         } catch (Exception e) {
             log.error("Test mail error: {}", e.getMessage(), e);
             return ResponseEntity.status(500).body("ERROR: " + e.getClass().getName() + ": " + e.getMessage());
@@ -43,7 +48,7 @@ public class FeedbackController {
     public ResponseEntity<FeedbackResponse> submitFeedback(@Valid @RequestBody FeedbackRequest request) {
         String targetEmail = (request.recipientEmail() != null && !request.recipientEmail().isBlank())
                 ? request.recipientEmail()
-                : DEFAULT_RECIPIENT;
+                : defaultRecipient;
 
         log.info("==========================================================");
         log.info(">>> QUEUING REAL EMAIL TO: {}", targetEmail);
