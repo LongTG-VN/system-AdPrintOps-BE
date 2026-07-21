@@ -8,7 +8,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
-import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequestMapping("/api/v1/feedback")
@@ -54,8 +53,7 @@ public class FeedbackController {
         log.info(">>> QUEUING REAL EMAIL TO: {}", targetEmail);
         log.info("Details (Input/Output/Reason):\n{}", request.reasonDetails());
 
-        CompletableFuture.runAsync(() -> {
-            try {
+        try {
                 StringBuilder content = new StringBuilder();
                 content.append("<h2>HỆ THỐNG PHẢN HỒI ADPRINTOPS</h2>");
                 content.append("<p><strong>Thời gian gửi:</strong> ").append(Instant.now()).append("</p>");
@@ -77,14 +75,14 @@ public class FeedbackController {
                         request.imageDataBase64()
                 );
                 log.info(">>> SUCCESS: Real email dispatched to {}", targetEmail);
-            } catch (Exception e) {
-                log.error("Failed to send real email: {}", e.getMessage(), e);
-            }
-        });
+        } catch (Exception e) {
+            log.error("Failed to send real email: {}", e.getMessage(), e);
+            throw new IllegalStateException("Không thể gửi email góp ý. Vui lòng thử lại sau.", e);
+        }
 
         log.info("==========================================================");
 
-        String responseMessage = "Góp ý đã được tiếp nhận và đang gửi tới email " + targetEmail + "!";
+        String responseMessage = "Góp ý đã được gửi tới email " + targetEmail + ".";
         return ResponseEntity.ok(new FeedbackResponse(true, responseMessage, Instant.now()));
     }
 }

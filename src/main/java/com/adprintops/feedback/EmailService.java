@@ -20,14 +20,17 @@ public class EmailService {
 
     private final JavaMailSender mailSender;
     private final String resendApiKey;
+    private final String resendFrom;
     private final RestTemplate restTemplate;
 
     public EmailService(
             JavaMailSender mailSender,
-            @Value("${app.resend.api-key:}") String resendApiKey
+            @Value("${app.resend.api-key:}") String resendApiKey,
+            @Value("${app.resend.from:}") String resendFrom
     ) {
         this.mailSender = mailSender;
         this.resendApiKey = resendApiKey;
+        this.resendFrom = resendFrom;
         this.restTemplate = new RestTemplate();
     }
 
@@ -42,7 +45,7 @@ public class EmailService {
             }
         }
 
-        // 2. Fallback to JavaMailSender SMTP (Port 465 / 587)
+        // SMTP is retained for local development only. Render Free blocks SMTP ports.
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
@@ -72,9 +75,13 @@ public class EmailService {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(resendApiKey);
+        headers.set("User-Agent", "AdPrintOps/1.0");
 
         Map<String, Object> body = new HashMap<>();
-        body.put("from", "AdPrintOps <onboarding@resend.dev>");
+        if (resendFrom == null || resendFrom.isBlank()) {
+            throw new IllegalStateException("RESEND_FROM phải là email thuộc domain đã verify trên Resend");
+        }
+        body.put("from", resendFrom);
         body.put("to", List.of(toEmail));
         body.put("subject", subject);
         body.put("html", htmlBody);

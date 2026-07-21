@@ -53,6 +53,7 @@ app:
   pricing:
     allow-fallback: ${PRICING_ALLOW_FALLBACK:true}
   resend:
-    api-key: ${RESEND_API_KEY}
+    api-key: ${RESEND_API_KEY:}
+    from: ${RESEND_FROM:AdPrintOps <onboarding@resend.dev>}
   feedback:
     default-recipient: ${FEEDBACK_DEFAULT_RECIPIENT:longtg.ce191181@gmail.com}
