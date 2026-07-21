@@ -1,17 +1,12 @@
 package com.adprintops.feedback;
 
-import jakarta.mail.internet.MimeMessage;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.ResponseEntity;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
-import java.util.Base64;
 import java.util.concurrent.CompletableFuture;
 
 @RestController
@@ -21,22 +16,22 @@ public class FeedbackController {
     private static final Logger log = LoggerFactory.getLogger(FeedbackController.class);
     private static final String DEFAULT_RECIPIENT = "gialong.game@gmail.com";
 
-    private final JavaMailSender mailSender;
+    private final EmailService emailService;
 
-    public FeedbackController(JavaMailSender mailSender) {
-        this.mailSender = mailSender;
+    public FeedbackController(EmailService emailService) {
+        this.emailService = emailService;
     }
 
     @GetMapping("/test-mail")
     public ResponseEntity<String> testMail() {
         try {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, false, "UTF-8");
-            helper.setFrom("gialong.game@gmail.com");
-            helper.setTo(DEFAULT_RECIPIENT);
-            helper.setSubject("[TEST DIRECT MAIL] AdPrintOps Backend");
-            helper.setText("Test direct email sending from Render backend.");
-            mailSender.send(message);
+            emailService.sendEmail(
+                    DEFAULT_RECIPIENT,
+                    "[TEST DIRECT MAIL] AdPrintOps Backend",
+                    "<h2>Test direct email sending from Render backend via EmailService.</h2>",
+                    null,
+                    null
+            );
             return ResponseEntity.ok("SUCCESS: Email sent to " + DEFAULT_RECIPIENT);
         } catch (Exception e) {
             log.error("Test mail error: {}", e.getMessage(), e);
@@ -51,18 +46,11 @@ public class FeedbackController {
                 : DEFAULT_RECIPIENT;
 
         log.info("==========================================================");
-        log.info(">>> QUEUING REAL EMAIL VIA GMAIL SMTP TO: {}", targetEmail);
+        log.info(">>> QUEUING REAL EMAIL TO: {}", targetEmail);
         log.info("Details (Input/Output/Reason):\n{}", request.reasonDetails());
 
         CompletableFuture.runAsync(() -> {
             try {
-                MimeMessage message = mailSender.createMimeMessage();
-                MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-
-                helper.setFrom("gialong.game@gmail.com");
-                helper.setTo(targetEmail);
-                helper.setSubject("[BÁO CÁO GÓP Ý & BÁO LỖI] Bảng Báo Giá AdPrintOps");
-
                 StringBuilder content = new StringBuilder();
                 content.append("<h2>HỆ THỐNG PHẢN HỒI ADPRINTOPS</h2>");
                 content.append("<p><strong>Thời gian gửi:</strong> ").append(Instant.now()).append("</p>");
@@ -76,20 +64,16 @@ public class FeedbackController {
                     content.append("<p><strong>File đính kèm:</strong> ").append(request.fileName()).append("</p>");
                 }
 
-                helper.setText(content.toString(), true);
-
-                // Attach image if base64 provided
-                if (request.imageDataBase64() != null && request.imageDataBase64().contains(",")) {
-                    String base64Data = request.imageDataBase64().split(",")[1];
-                    byte[] imageBytes = Base64.getDecoder().decode(base64Data);
-                    String fileName = request.fileName() != null && !request.fileName().isBlank() ? request.fileName() : "dinh_kem.png";
-                    helper.addAttachment(fileName, new ByteArrayResource(imageBytes));
-                }
-
-                mailSender.send(message);
-                log.info(">>> SUCCESS: Real email sent via Google SMTP to {}", targetEmail);
+                emailService.sendEmail(
+                        targetEmail,
+                        "[BÁO CÁO GÓP Ý & BÁO LỖI] Bảng Báo Giá AdPrintOps",
+                        content.toString(),
+                        request.fileName(),
+                        request.imageDataBase64()
+                );
+                log.info(">>> SUCCESS: Real email dispatched to {}", targetEmail);
             } catch (Exception e) {
-                log.error("Failed to send real email via Google SMTP: {}", e.getMessage(), e);
+                log.error("Failed to send real email: {}", e.getMessage(), e);
             }
         });
 
