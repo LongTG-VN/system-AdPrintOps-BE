@@ -7,13 +7,11 @@ import com.adprintops.pricing.domain.PricingMaterialRepository;
 import com.adprintops.pricing.domain.PricingRule;
 import com.adprintops.pricing.domain.PricingRuleRepository;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 
 @Component
-@Profile("dev-seed")
 public class PricingDataInitializer implements CommandLineRunner {
 
     private final PricingRuleRepository pricingRuleRepository;
