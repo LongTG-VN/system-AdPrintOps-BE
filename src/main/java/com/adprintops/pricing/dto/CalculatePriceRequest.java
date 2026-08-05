@@ -26,8 +26,8 @@ public record CalculatePriceRequest(
         @Min(value = 1, message = "Box count must be at least 1")
         Integer boxCount,
 
-        @Min(value = 1, message = "Frame tube size must be positive")
-        Integer frameTubeSize, // 16, 20, 25mm
+        @Min(value = 0, message = "Frame tube size must be non-negative")
+        Integer frameTubeSize, // 0 (không khung), 16, 20, 25mm
 
         @Min(value = 1, message = "Paper GSM must be positive")
         Integer paperGsm,

@@ -64,17 +64,39 @@ public class BangPricingStrategy implements PricingStrategy {
             throw new PricingConfigurationException("Chưa có cấu hình giá Bảng hiệu khoán cho tổ hợp " + configKey);
         }
 
-        // Fixed lumpsum price per item according to bGia source!
-        BigDecimal singleUnitPrice = configOpt.get().getBasePrice().setScale(0, RoundingMode.HALF_UP);
-        BigDecimal totalPrice = singleUnitPrice.multiply(BigDecimal.valueOf(quantity)).setScale(0, RoundingMode.HALF_UP);
+        BigDecimal boardCost = configOpt.get().getBasePrice().setScale(0, RoundingMode.HALF_UP);
 
         List<LineItem> lineItems = new ArrayList<>();
         List<String> appliedRules = new ArrayList<>();
 
         appliedRules.add("BANG_" + configKey);
-        lineItems.add(new LineItem("SIGN_BOARD", configOpt.get().getConfigName() + " (" + singleArea + "m² - Khoán " + tierName + ")", singleUnitPrice));
+        lineItems.add(new LineItem("SIGN_BOARD", configOpt.get().getConfigName() + " (" + singleArea + "m² - Khoán " + tierName + ")", boardCost.multiply(BigDecimal.valueOf(quantity))));
 
-        String note = "Bảng Hiệu Cứng | " + configOpt.get().getConfigName() + " | Diện tích: " + singleArea + "m² | Khoán: " + tierName;
+        // Frame calculation: 0 (Không khung), 16 (65k/m), 20 (85k/m), 25 (105k/m)
+        int tubeSize = request.frameTubeSize() != null ? request.frameTubeSize() : 0;
+        BigDecimal tienSat = BigDecimal.ZERO;
+        BigDecimal tienChan = BigDecimal.ZERO;
+
+        if (tubeSize > 0) {
+            BigDecimal frameRatePerM = (tubeSize == 25) ? new BigDecimal("105000") : ((tubeSize == 20) ? new BigDecimal("85000") : new BigDecimal("65000"));
+            BigDecimal chuViPerItem = width.add(height).multiply(new BigDecimal("2"));
+            tienSat = chuViPerItem.multiply(frameRatePerM).multiply(BigDecimal.valueOf(quantity)).setScale(0, RoundingMode.HALF_UP);
+            lineItems.add(new LineItem("FRAME", "Khung sắt " + tubeSize + "mm (" + chuViPerItem + "m @ " + frameRatePerM + "đ/m)", tienSat));
+            appliedRules.add("BANG_FRAME_V" + tubeSize);
+
+            if (Boolean.TRUE.equals(request.hasLeg())) {
+                BigDecimal totalLegM = new BigDecimal("4.0").multiply(BigDecimal.valueOf(quantity));
+                tienChan = frameRatePerM.multiply(totalLegM).setScale(0, RoundingMode.HALF_UP);
+                lineItems.add(new LineItem("FRAME_LEGS", "Thêm 2 chân khung (4m @ " + frameRatePerM + "đ/m)", tienChan));
+                appliedRules.add("BANG_FRAME_LEGS_4M");
+            }
+        }
+
+        BigDecimal totalPrice = boardCost.multiply(BigDecimal.valueOf(quantity)).add(tienSat).add(tienChan).setScale(0, RoundingMode.HALF_UP);
+        BigDecimal singleUnitPrice = totalPrice.divide(BigDecimal.valueOf(quantity), 0, RoundingMode.HALF_UP);
+
+        String frameNote = tubeSize > 0 ? " | Khung sắt V" + tubeSize : " | Không khung sắt";
+        String note = "Bảng Hiệu | " + configOpt.get().getConfigName() + frameNote + " | " + singleArea + "m²";
 
         return new CalculatePriceResponse(
                 "BANG", false, singleArea, totalArea, BigDecimal.ZERO, BigDecimal.ZERO, singleUnitPrice, totalPrice, "VND", lineItems, appliedRules, note

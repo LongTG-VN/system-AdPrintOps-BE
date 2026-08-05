@@ -42,14 +42,34 @@ public class DecalPricingStrategy implements PricingStrategy {
         BigDecimal realSingleArea = width.multiply(height).setScale(4, RoundingMode.HALF_UP);
         BigDecimal billableSingleArea = realSingleArea;
 
-        // Source contract: jobs below 0.1m² use real area; all larger jobs try 0.9/1.0/1.2m rolls.
+        // Standard Decal print shop rolls: 0.9m, 1.0m, 1.07m, 1.27m, 1.52m
+        BigDecimal matchedRoll = null;
         if (realSingleArea.compareTo(new BigDecimal("0.1")) >= 0) {
-            BigDecimal best = null;
-            for (BigDecimal roll : List.of(new BigDecimal("0.9"), BigDecimal.ONE, new BigDecimal("1.2"))) {
-                if (width.compareTo(roll) <= 0) best = best == null ? roll.multiply(height) : best.min(roll.multiply(height));
-                if (height.compareTo(roll) <= 0) best = best == null ? roll.multiply(width) : best.min(roll.multiply(width));
+            BigDecimal bestArea = null;
+            List<BigDecimal> rolls = List.of(
+                    new BigDecimal("0.90"),
+                    BigDecimal.ONE,
+                    new BigDecimal("1.07"),
+                    new BigDecimal("1.27"),
+                    new BigDecimal("1.52")
+            );
+            for (BigDecimal roll : rolls) {
+                if (width.compareTo(roll) <= 0) {
+                    BigDecimal area = roll.multiply(height);
+                    if (bestArea == null || area.compareTo(bestArea) < 0) {
+                        bestArea = area;
+                        matchedRoll = roll;
+                    }
+                }
+                if (height.compareTo(roll) <= 0) {
+                    BigDecimal area = roll.multiply(width);
+                    if (bestArea == null || area.compareTo(bestArea) < 0) {
+                        bestArea = area;
+                        matchedRoll = roll;
+                    }
+                }
             }
-            if (best != null) billableSingleArea = best.setScale(4, RoundingMode.HALF_UP);
+            if (bestArea != null) billableSingleArea = bestArea.setScale(4, RoundingMode.HALF_UP);
         }
 
         BigDecimal totalAreaSqm = billableSingleArea.multiply(BigDecimal.valueOf(quantity)).setScale(4, RoundingMode.HALF_UP);
@@ -99,7 +119,8 @@ public class DecalPricingStrategy implements PricingStrategy {
         appliedRules.add(ruleName);
 
         BigDecimal printCost = billableSingleArea.multiply(effectiveRate).setScale(0, RoundingMode.HALF_UP);
-        lineItems.add(new LineItem("PRINT", "In " + matName + " (" + effectiveRate + "đ/m²)", printCost));
+        String rollLabel = matchedRoll != null ? " (Khổ cuộn " + matchedRoll + "m)" : "";
+        lineItems.add(new LineItem("PRINT", "In " + matName + rollLabel + " (" + effectiveRate + "đ/m²)", printCost));
 
         BigDecimal laminationCost = BigDecimal.ZERO;
         if (hasLamination) {
@@ -112,7 +133,9 @@ public class DecalPricingStrategy implements PricingStrategy {
         BigDecimal singleUnitPrice = printCost.add(laminationCost).setScale(0, RoundingMode.HALF_UP);
         BigDecimal totalPrice = singleUnitPrice.multiply(BigDecimal.valueOf(quantity)).setScale(0, RoundingMode.HALF_UP);
 
-        String note = matName + " | Diện tích: " + realSingleArea + "m²" + (hasLamination ? " | Cán màng" : "");
+        String note = matName + " | In: " + width + "m x " + height + "m"
+                + (matchedRoll != null ? " (Xếp khổ cuộn: " + matchedRoll + "m -> Tính: " + billableSingleArea + "m²)" : "")
+                + (hasLamination ? " | Cán màng" : "");
 
         return new CalculatePriceResponse(
                 "DECAL", false, realSingleArea, totalAreaSqm, effectiveRate, laminationCost, singleUnitPrice, totalPrice, "VND", lineItems, appliedRules, note
