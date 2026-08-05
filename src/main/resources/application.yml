@@ -7,11 +7,16 @@ spring:
   application:
     name: system-adprintops-be
 
+  servlet:
+    multipart:
+      max-file-size: ${MAX_UPLOAD_FILE_SIZE:200MB}
+      max-request-size: ${MAX_UPLOAD_REQUEST_SIZE:200MB}
+
   datasource:
-    url: ${DB_URL:jdbc:postgresql://aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres?sslmode=require&prepareThreshold=0}
-    username: ${DB_USERNAME:postgres.kedseyelxebrcwyvpzts}
-    password: ${DB_PASSWORD:UKZRVcw2OepSKBpj}
-    driver-class-name: ${DB_DRIVER:org.postgresql.Driver}
+    url: ${DB_URL:jdbc:h2:mem:adprintops_db;MODE=PostgreSQL;DB_CLOSE_DELAY=-1}
+    username: ${DB_USERNAME:sa}
+    password: ${DB_PASSWORD:}
+    driver-class-name: ${DB_DRIVER:org.h2.Driver}
 
   jpa:
     hibernate:
@@ -57,3 +62,5 @@ app:
     from: ${RESEND_FROM:AdPrintOps <onboarding@resend.dev>}
   feedback:
     default-recipient: ${FEEDBACK_DEFAULT_RECIPIENT:longtg.ce191181@gmail.com}
+  storage:
+    design-files-path: ${DESIGN_FILES_PATH:D:/Design}
