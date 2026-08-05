@@ -112,6 +112,22 @@ public class PricingDataInitializer implements CommandLineRunner {
         saveConfigIfMissing("BANG", "MICA_CAT_MID", "Mica Cắt (<0.5m2)", new BigDecimal("1500000"), "Mica Cắt vừa");
         saveConfigIfMissing("BANG", "MICA_CAT_LARGE", "Mica Cắt (>=0.5m2)", new BigDecimal("1000000"), "Mica Cắt lớn");
 
+        // GIAY - In Giấy Lẻ (A4 / A5 tính bằng A4, A3) & Ép Nhựa
+        saveConfigIfMissing("GIAY", "GIAY_A4_DAY1", "Giấy Dày A4 1 mặt (A5 bằng A4)", new BigDecimal("7000"), "7k/tờ");
+        saveConfigIfMissing("GIAY", "GIAY_A4_DAY2", "Giấy Dày A4 2 mặt", new BigDecimal("13000"), "13k/tờ");
+        saveConfigIfMissing("GIAY", "GIAY_A3_DAY1", "Giấy Dày A3 1 mặt", new BigDecimal("13000"), "13k/tờ");
+        saveConfigIfMissing("GIAY", "GIAY_A3_DAY2", "Giấy Dày A3 2 mặt", new BigDecimal("26000"), "26k/tờ");
+
+        saveConfigIfMissing("GIAY", "GIAY_A4_BONG1", "Bóng Dày A4 1 mặt", new BigDecimal("9000"), "9k/tờ");
+        saveConfigIfMissing("GIAY", "GIAY_A4_BONG2", "Bóng Dày A4 2 mặt", new BigDecimal("17000"), "17k/tờ");
+        saveConfigIfMissing("GIAY", "GIAY_A3_BONG1", "Bóng Dày A3 1 mặt", new BigDecimal("17000"), "17k/tờ");
+        saveConfigIfMissing("GIAY", "GIAY_A3_BONG2", "Bóng Dày A3 2 mặt", new BigDecimal("34000"), "34k/tờ");
+
+        saveConfigIfMissing("GIAY", "EP_A4_1", "Ép Nhựa A4 1 mặt (A5 bằng A4)", new BigDecimal("20000"), "20k/tờ");
+        saveConfigIfMissing("GIAY", "EP_A4_2", "Ép Nhựa A4 2 mặt", new BigDecimal("25000"), "25k/tờ");
+        saveConfigIfMissing("GIAY", "EP_A3_1", "Ép Nhựa A3 1 mặt", new BigDecimal("30000"), "30k/tờ");
+        saveConfigIfMissing("GIAY", "EP_A3_2", "Ép Nhựa A3 2 mặt", new BigDecimal("40000"), "40k/tờ");
+
         // GIAY - ROI A4 (+20k updated from Image 1)
         saveConfigIfMissing("GIAY", "ROI_A4_100_500", "Tờ rơi A4 100g (500 tờ)", new BigDecimal("720000"), "A4 100g 500t");
         saveConfigIfMissing("GIAY", "ROI_A4_100_1000", "Tờ rơi A4 100g (1.000 tờ)", new BigDecimal("820000"), "A4 100g 1000t");
