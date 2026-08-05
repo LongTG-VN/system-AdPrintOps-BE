@@ -43,29 +43,45 @@ public class GiayPricingStrategy implements PricingStrategy {
 
         // Map frontend values to backend subtypes seamlessly
         if ("giay".equals(rawSubtype) || "in_le".equals(rawSubtype) || "giay_le".equals(rawSubtype)) {
-            // In giấy lẻ (khổ A5/A4/A3, loại day1/day2/bong1/bong2)
+            // In giấy lẻ (khổ A5/A4/A3/A2, số lượng 1..10+ tấm)
             String kho = request.tranhPreset() != null ? request.tranhPreset().toUpperCase() : "A4";
-            String mat = request.materialCode() != null ? request.materialCode().toUpperCase() : "DAY1";
-            configKey = "GIAY_" + kho + "_" + mat;
 
-            Optional<PricingConfiguration> configOpt = pricingConfigurationRepository
-                    .findByCategoryCodeAndConfigKeyAndActiveTrue("GIAY", configKey);
+            BigDecimal firstSheetPrice;
+            BigDecimal secondSheetPrice;
+            BigDecimal addSheetPrice;
 
-            if (configOpt.isPresent()) {
-                singleUnitPrice = configOpt.get().getBasePrice().setScale(0, RoundingMode.HALF_UP);
+            if ("A5".equals(kho)) {
+                firstSheetPrice = new BigDecimal("20000");
+                secondSheetPrice = new BigDecimal("35000");
+                addSheetPrice = new BigDecimal("15000");
+            } else if ("A3".equals(kho)) {
+                firstSheetPrice = new BigDecimal("50000");
+                secondSheetPrice = new BigDecimal("80000");
+                addSheetPrice = new BigDecimal("30000");
+            } else if ("A2".equals(kho)) {
+                firstSheetPrice = new BigDecimal("70000");
+                secondSheetPrice = new BigDecimal("110000");
+                addSheetPrice = new BigDecimal("40000");
             } else {
-                // Fallback for custom dimensions sqm @ 80k/m²
-                BigDecimal width = request.widthM() != null ? request.widthM() : new BigDecimal("0.21");
-                BigDecimal height = request.heightM() != null ? request.heightM() : new BigDecimal("0.297");
-                BigDecimal singleArea = width.multiply(height).setScale(4, RoundingMode.HALF_UP);
-                singleUnitPrice = singleArea.multiply(new BigDecimal("80000")).setScale(0, RoundingMode.HALF_UP);
-                configKey = "SQM_80K";
+                // Default A4
+                firstSheetPrice = new BigDecimal("30000");
+                secondSheetPrice = new BigDecimal("50000");
+                addSheetPrice = new BigDecimal("20000");
             }
 
-            totalPrice = singleUnitPrice.multiply(BigDecimal.valueOf(quantity)).setScale(0, RoundingMode.HALF_UP);
+            if (quantity == 1) {
+                totalPrice = firstSheetPrice;
+            } else if (quantity == 2) {
+                totalPrice = secondSheetPrice;
+            } else {
+                totalPrice = secondSheetPrice.add(addSheetPrice.multiply(BigDecimal.valueOf(quantity - 2)));
+            }
+
+            singleUnitPrice = totalPrice.divide(BigDecimal.valueOf(quantity), 0, RoundingMode.HALF_UP);
+            configKey = "GIAY_TIER_" + kho + "_Q" + quantity;
             appliedRules.add("GIAY_" + configKey);
-            lineItems.add(new LineItem("PRINT_PAPER", "In Giấy lẻ (" + quantity + " tờ)", totalPrice));
-            note = "In Giấy Lẻ | " + quantity + " tờ";
+            lineItems.add(new LineItem("PRINT_PAPER", "In Giấy " + kho + " (" + quantity + " tấm)", totalPrice));
+            note = "In Giấy " + kho + " | " + quantity + " tấm";
 
         } else if ("ep".equals(rawSubtype) || "ep_nhua".equals(rawSubtype)) {
             // Ép nhựa (khổ A5/A4/A3, số mặt 1/2)

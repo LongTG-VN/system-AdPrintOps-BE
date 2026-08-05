@@ -62,6 +62,21 @@ public class DecalPricingStrategy implements PricingStrategy {
         }
         PricingRule rule = matchingRules.getFirst();
 
+        BigDecimal baseRate = rule.getPricePerSqm();
+        String ruleName = rule.getRuleName();
+
+        // Volume discounts for large total area (> 4m²)
+        if (totalAreaSqm.compareTo(new BigDecimal("15.0")) >= 0) {
+            baseRate = baseRate.min(new BigDecimal("80000"));
+            ruleName = "DECAL_VO_15M2";
+        } else if (totalAreaSqm.compareTo(new BigDecimal("10.0")) >= 0) {
+            baseRate = baseRate.min(new BigDecimal("90000"));
+            ruleName = "DECAL_VO_10M2";
+        } else if (totalAreaSqm.compareTo(new BigDecimal("5.0")) >= 0) {
+            baseRate = baseRate.min(new BigDecimal("100000"));
+            ruleName = "DECAL_VO_5M2";
+        }
+
         String matCode = (request.materialCode() != null && !request.materialCode().isBlank())
                 ? request.materialCode().toLowerCase() : "thuong";
 
@@ -71,7 +86,7 @@ public class DecalPricingStrategy implements PricingStrategy {
                         "Chưa có vật liệu DECAL đang hoạt động với mã " + matCode
                 ));
 
-        BigDecimal effectiveRate = rule.getPricePerSqm()
+        BigDecimal effectiveRate = baseRate
                 .multiply(material.getMultiplier())
                 .add(material.getBasePrice());
         String matName = material.getMaterialName();
@@ -81,14 +96,14 @@ public class DecalPricingStrategy implements PricingStrategy {
 
         List<LineItem> lineItems = new ArrayList<>();
         List<String> appliedRules = new ArrayList<>();
-        appliedRules.add(rule.getRuleName());
+        appliedRules.add(ruleName);
 
         BigDecimal printCost = billableSingleArea.multiply(effectiveRate).setScale(0, RoundingMode.HALF_UP);
         lineItems.add(new LineItem("PRINT", "In " + matName + " (" + effectiveRate + "đ/m²)", printCost));
 
         BigDecimal laminationCost = BigDecimal.ZERO;
         if (hasLamination) {
-            BigDecimal laminationFeeRate = rule.getLaminationFeePerSqm();
+            BigDecimal laminationFeeRate = new BigDecimal("50000");
             laminationCost = billableSingleArea.multiply(laminationFeeRate).setScale(0, RoundingMode.HALF_UP);
             lineItems.add(new LineItem("LAMINATION", "Phí cán màng (" + laminationFeeRate + "đ/m²)", laminationCost));
             appliedRules.add("DECAL_LAMINATION");

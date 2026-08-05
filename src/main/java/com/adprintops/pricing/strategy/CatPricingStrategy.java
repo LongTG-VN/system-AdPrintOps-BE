@@ -87,7 +87,12 @@ public class CatPricingStrategy implements PricingStrategy {
             lineItems.add(new LineItem("CUT_LE", "Cắt decal lẻ " + matLabel + " khổ " + tacRoll + " tấc (" + tacCount + " tấc @ " + pricePerTac + "đ/tấc)", totalPrice));
             note = "Cắt Decal Lẻ | " + matLabel + " | Khổ " + tacRoll + " tấc";
         } else {
-            // Cut standard per m² with selected material rate
+            // Cut standard per m²: >= 1m² drops to 120,000đ/m² (for decal_si)
+            if ("decal_si".equals(matCode) && totalArea.compareTo(BigDecimal.ONE) >= 0) {
+                ratePerSqm = new BigDecimal("120000");
+            } else if ("decal_si".equals(matCode) && totalArea.compareTo(BigDecimal.ONE) < 0) {
+                ratePerSqm = new BigDecimal("130000");
+            }
             singleUnitPrice = realSingleArea.multiply(ratePerSqm).setScale(0, RoundingMode.HALF_UP);
             totalPrice = singleUnitPrice.multiply(BigDecimal.valueOf(quantity)).setScale(0, RoundingMode.HALF_UP);
             appliedRules.add("CAT_MATERIAL_" + matCode.toUpperCase());
