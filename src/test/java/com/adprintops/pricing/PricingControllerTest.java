@@ -75,8 +75,8 @@ public class PricingControllerTest {
                         .content(jsonPayload))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.singleAreaSqm").value(0.25))
-                .andExpect(jsonPath("$.singleUnitPrice").value(63000))
-                .andExpect(jsonPath("$.totalPrice").value(126000));
+                .andExpect(jsonPath("$.singleUnitPrice").value(70000))
+                .andExpect(jsonPath("$.totalPrice").value(140000));
     }
 
     @Test

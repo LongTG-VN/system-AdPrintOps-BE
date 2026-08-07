@@ -72,6 +72,9 @@ public class DecalPricingStrategy implements PricingStrategy {
             if (bestArea != null) billableSingleArea = bestArea.setScale(4, RoundingMode.HALF_UP);
         }
 
+        // Apply area rounding rule (<= 0.10 => 0.20; > 0.10 => làm tròn lên mỗi 0.10m²)
+        billableSingleArea = roundUpAreaToTenths(billableSingleArea);
+
         BigDecimal totalAreaSqm = billableSingleArea.multiply(BigDecimal.valueOf(quantity)).setScale(4, RoundingMode.HALF_UP);
 
         List<PricingRule> matchingRules = pricingRuleRepository.findMatchingRules("DECAL", billableSingleArea);
@@ -140,5 +143,24 @@ public class DecalPricingStrategy implements PricingStrategy {
         return new CalculatePriceResponse(
                 "DECAL", false, realSingleArea, totalAreaSqm, effectiveRate, laminationCost, singleUnitPrice, totalPrice, "VND", lineItems, appliedRules, note
         );
+    }
+
+    public static BigDecimal roundUpAreaToTenths(BigDecimal rawArea) {
+        if (rawArea == null || rawArea.compareTo(BigDecimal.ZERO) <= 0) {
+            return new BigDecimal("0.20");
+        }
+        if (rawArea.compareTo(new BigDecimal("0.10")) <= 0) {
+            return new BigDecimal("0.20");
+        }
+
+        BigDecimal multiplied = rawArea.multiply(new BigDecimal("10"));
+        BigDecimal ceiled = multiplied.setScale(0, RoundingMode.CEILING);
+        BigDecimal rounded = ceiled.divide(new BigDecimal("10"), 2, RoundingMode.HALF_UP);
+
+        if (rounded.compareTo(new BigDecimal("0.20")) < 0) {
+            return new BigDecimal("0.20");
+        }
+
+        return rounded;
     }
 }

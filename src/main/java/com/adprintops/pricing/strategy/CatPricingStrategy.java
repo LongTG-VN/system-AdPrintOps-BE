@@ -94,16 +94,18 @@ public class CatPricingStrategy implements PricingStrategy {
             lineItems.add(new LineItem("CUT_LE", "Cắt decal lẻ " + matLabel + " khổ " + tacRoll + " tấc (" + tacCount + " tấc @ " + pricePerTac + "đ/tấc)", totalPrice));
             note = "Cắt Decal Lẻ | " + matLabel + " | Khổ " + tacRoll + " tấc";
         } else {
-            // Cut standard per m² with ROLL FITTING (Tính Dô Khổ)
-            BigDecimal billableRollArea = calculateBillableRollArea(width, height, availableRolls);
+            // Cut standard per m² with ROLL FITTING & AREA ROUNDING (<= 0.10 => 0.20, > 0.10 => làm tròn lên mỗi 0.10m²)
+            BigDecimal rawRollArea = calculateBillableRollArea(width, height, availableRolls);
+            BigDecimal billableRollArea = DecalPricingStrategy.roundUpAreaToTenths(rawRollArea);
+
             singleUnitPrice = billableRollArea.multiply(ratePerSqm).setScale(0, RoundingMode.HALF_UP);
             totalPrice = singleUnitPrice.multiply(BigDecimal.valueOf(quantity)).setScale(0, RoundingMode.HALF_UP);
             appliedRules.add("CAT_MATERIAL_" + matCode.toUpperCase() + "_ROLL_FITTING");
-            lineItems.add(new LineItem("CUT_CHUAN", "Cắt " + matLabel + " (Tính dô khổ: " + billableRollArea + "m² @ " + ratePerSqm + "đ/m²)", totalPrice));
-            note = "Cắt Decal | " + matLabel + " | Kích thước: " + width + "m x " + height + "m (Dô khổ: " + billableRollArea + "m²)";
+            lineItems.add(new LineItem("CUT_CHUAN", "Cắt " + matLabel + " (Dô khổ/làm tròn: " + billableRollArea + "m² @ " + ratePerSqm + "đ/m²)", totalPrice));
+            note = "Cắt Decal | " + matLabel + " | Kích thước: " + width + "m x " + height + "m (Làm tròn diện tích: " + billableRollArea + "m²)";
         }
 
-        BigDecimal billableTotalArea = calculateBillableRollArea(width, height, availableRolls).multiply(BigDecimal.valueOf(quantity));
+        BigDecimal billableTotalArea = DecalPricingStrategy.roundUpAreaToTenths(calculateBillableRollArea(width, height, availableRolls)).multiply(BigDecimal.valueOf(quantity));
 
         return new CalculatePriceResponse(
                 "CAT", false, realSingleArea, billableTotalArea, ratePerSqm, BigDecimal.ZERO, singleUnitPrice, totalPrice, "VND", lineItems, appliedRules, note
