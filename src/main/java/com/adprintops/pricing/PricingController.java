@@ -55,7 +55,9 @@ public class PricingController {
                 request.paperSides(),
                 request.tranhType(),
                 request.tranhPreset(),
-                request.tranhPackage()
+                request.tranhPackage(),
+                request.eyeletCount(),
+                request.polePocketMode()
         );
         CalculatePriceResponse response = pricingService.calculatePrice(fullRequest);
         return ResponseEntity.ok(response);
