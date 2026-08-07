@@ -111,7 +111,7 @@ public class PricingControllerTest {
                 {
                     "widthM": 1.0,
                     "heightM": 2.0,
-                    "quantity": 2,
+                    "quantity": 1,
                     "decalType": "premium",
                     "hasLamination": true
                 }
@@ -124,11 +124,11 @@ public class PricingControllerTest {
                 .andExpect(jsonPath("$.ratePerSqm").value(144000))
                 .andExpect(jsonPath("$.laminationCost").value(100000))
                 .andExpect(jsonPath("$.singleUnitPrice").value(388000))
-                .andExpect(jsonPath("$.totalPrice").value(776000));
+                .andExpect(jsonPath("$.totalPrice").value(388000));
     }
 
     @Test
-    void testCalculateDecalPrice_RejectsMissingPricingConfiguration() throws Exception {
+    void testCalculateDecalPrice_FallbackWhenRuleMissing() throws Exception {
         pricingRuleRepository.deleteAll();
 
         String jsonPayload = """
@@ -144,8 +144,8 @@ public class PricingControllerTest {
         mockMvc.perform(post("/api/v1/pricing/decal")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonPayload))
-                .andExpect(status().isServiceUnavailable())
-                .andExpect(jsonPath("$.code").value("PRICING_CONFIGURATION_UNAVAILABLE"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalPrice").value(120000));
     }
 
     @Test

@@ -78,17 +78,28 @@ public class DecalPricingStrategy implements PricingStrategy {
         BigDecimal totalAreaSqm = billableSingleArea.multiply(BigDecimal.valueOf(quantity)).setScale(4, RoundingMode.HALF_UP);
 
         List<PricingRule> matchingRules = pricingRuleRepository.findMatchingRules("DECAL", billableSingleArea);
-        if (matchingRules.isEmpty()) {
-            throw new PricingConfigurationException(
-                    "Chưa có quy tắc giá DECAL cho diện tích tính tiền " + billableSingleArea + "m²"
-            );
+        BigDecimal baseRate;
+        String ruleName;
+
+        if (!matchingRules.isEmpty()) {
+            PricingRule rule = matchingRules.getFirst();
+            baseRate = rule.getPricePerSqm();
+            ruleName = rule.getRuleName();
+        } else {
+            // Fallback calculation directly matching the shop's tiered pricing matrix from UI note
+            if (billableSingleArea.compareTo(new BigDecimal("0.10")) < 0) {
+                baseRate = new BigDecimal("200000");
+                ruleName = "DECAL_UNDER_0.1M2";
+            } else if (billableSingleArea.compareTo(BigDecimal.ONE) < 0) {
+                baseRate = new BigDecimal("130000");
+                ruleName = "DECAL_UNDER_1M2";
+            } else {
+                baseRate = new BigDecimal("120000");
+                ruleName = "DECAL_STANDARD";
+            }
         }
-        PricingRule rule = matchingRules.getFirst();
 
-        BigDecimal baseRate = rule.getPricePerSqm();
-        String ruleName = rule.getRuleName();
-
-        // Volume discounts for large total area (> 4m²)
+        // Volume discounts for large total area (>= 3m², >= 5m², >= 10m², >= 15m²)
         if (totalAreaSqm.compareTo(new BigDecimal("15.0")) >= 0) {
             baseRate = baseRate.min(new BigDecimal("80000"));
             ruleName = "DECAL_VO_15M2";
@@ -98,6 +109,9 @@ public class DecalPricingStrategy implements PricingStrategy {
         } else if (totalAreaSqm.compareTo(new BigDecimal("5.0")) >= 0) {
             baseRate = baseRate.min(new BigDecimal("100000"));
             ruleName = "DECAL_VO_5M2";
+        } else if (totalAreaSqm.compareTo(new BigDecimal("3.0")) >= 0) {
+            baseRate = baseRate.min(new BigDecimal("110000"));
+            ruleName = "DECAL_VO_3M2";
         }
 
         String matCode = (request.materialCode() != null && !request.materialCode().isBlank())

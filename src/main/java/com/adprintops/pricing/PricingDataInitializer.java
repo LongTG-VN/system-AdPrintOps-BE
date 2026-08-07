@@ -28,12 +28,15 @@ public class PricingDataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
+        // Always ensure DECAL rules exist in DB
+        if (pricingRuleRepository.findByCategoryCodeOrderByMinAreaSqmAsc("DECAL").isEmpty()) {
+            pricingRuleRepository.save(new PricingRule("DECAL", "Nhỏ lẻ", BigDecimal.ZERO, new BigDecimal("0.100"), new BigDecimal("200000"), new BigDecimal("50000"), true, "Diện tích dưới 0.1m²"));
+            pricingRuleRepository.save(new PricingRule("DECAL", "Khổ nhỏ", new BigDecimal("0.100"), new BigDecimal("1.000"), new BigDecimal("130000"), new BigDecimal("50000"), true, "Diện tích từ 0.1m² đến dưới 1m²"));
+            pricingRuleRepository.save(new PricingRule("DECAL", "Khổ chuẩn", new BigDecimal("1.000"), null, new BigDecimal("120000"), new BigDecimal("50000"), true, "Diện tích từ 1m² trở lên"));
+        }
+
         // Seed default rules if empty
         if (pricingRuleRepository.count() == 0) {
-            pricingRuleRepository.save(new PricingRule("DECAL", "Nhỏ lẻ", BigDecimal.ZERO, new BigDecimal("0.100"), new BigDecimal("200000"), new BigDecimal("50000"), true, "Diện tích dưới 0.1m²"));
-            pricingRuleRepository.save(new PricingRule("DECAL", "Khổ nhỏ", new BigDecimal("0.100"), new BigDecimal("1.000"), new BigDecimal("140000"), new BigDecimal("50000"), true, "Diện tích từ 0.1m² đến dưới 1m²"));
-            pricingRuleRepository.save(new PricingRule("DECAL", "Khổ chuẩn", new BigDecimal("1.000"), null, new BigDecimal("120000"), new BigDecimal("50000"), true, "Diện tích từ 1m² trở lên"));
-
             pricingRuleRepository.save(new PricingRule("TEM", "Tem không bế", new BigDecimal("0.001"), new BigDecimal("9999.000"), new BigDecimal("100000"), BigDecimal.ZERO, true, "100k/m2"));
             pricingRuleRepository.save(new PricingRule("CAT", "Cắt decal chuẩn", new BigDecimal("0.001"), new BigDecimal("9999.000"), new BigDecimal("100000"), BigDecimal.ZERO, true, "Cắt viền"));
             pricingRuleRepository.save(new PricingRule("CARD", "Card Visit 1-4 hộp", new BigDecimal("1.000"), new BigDecimal("5.000"), new BigDecimal("70000"), BigDecimal.ZERO, true, "Card Visit 1-4 hộp (70k/hộp)"));
