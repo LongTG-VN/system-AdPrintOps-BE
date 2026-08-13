@@ -10,6 +10,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Component
 public class PricingDataInitializer implements CommandLineRunner {
@@ -28,8 +29,12 @@ public class PricingDataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        // Always ensure HIFLEX rules exist in DB
-        if (pricingRuleRepository.findByCategoryCodeOrderByMinAreaSqmAsc("HIFLEX").isEmpty()) {
+        // Always ensure HIFLEX has all multi-tier rules in DB
+        List<PricingRule> existingHiflexRules = pricingRuleRepository.findByCategoryCodeOrderByMinAreaSqmAsc("HIFLEX");
+        if (existingHiflexRules.size() <= 1) {
+            if (!existingHiflexRules.isEmpty()) {
+                pricingRuleRepository.deleteAll(existingHiflexRules);
+            }
             pricingRuleRepository.save(new PricingRule("HIFLEX", "Tấm nhỏ < 0.2m² (Khoán 35k)", BigDecimal.ZERO, new BigDecimal("0.200"), new BigDecimal("35000"), BigDecimal.ZERO, true, "Khoán 35.000đ/tấm"));
             pricingRuleRepository.save(new PricingRule("HIFLEX", "Tấm nhỏ < 0.3m² (Khoán 50k)", new BigDecimal("0.200"), new BigDecimal("0.300"), new BigDecimal("50000"), BigDecimal.ZERO, true, "Khoán 50.000đ/tấm"));
             pricingRuleRepository.save(new PricingRule("HIFLEX", "Tấm nhỏ lẻ (< 1m²)", new BigDecimal("0.300"), new BigDecimal("1.000"), new BigDecimal("150000"), BigDecimal.ZERO, true, "150.000đ/m²"));
