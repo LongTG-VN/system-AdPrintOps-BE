@@ -43,10 +43,6 @@ public class PricingServiceImpl implements PricingService {
     @Override
     @Transactional(readOnly = true)
     public CalculatePriceResponse calculatePrice(CalculatePriceRequest request) {
-        if (request.categoryCode() == null || request.categoryCode().isBlank()) {
-            throw new IllegalArgumentException("Mã danh mục (categoryCode) không được để trống.");
-        }
-
         String catCode = request.categoryCode().toUpperCase();
         PricingStrategy strategy = strategyMap.get(catCode);
 
@@ -54,7 +50,32 @@ public class PricingServiceImpl implements PricingService {
             throw new PricingConfigurationException("Chưa hỗ trợ động cơ tính giá cho danh mục: " + catCode);
         }
 
-        return strategy.calculate(request);
+        CalculatePriceResponse response = strategy.calculate(request);
+
+        if (request.customFee() != null && request.customFee().compareTo(BigDecimal.ZERO) > 0) {
+            BigDecimal fee = request.customFee().setScale(0, RoundingMode.HALF_UP);
+            BigDecimal newTotalPrice = response.totalPrice().add(fee);
+            List<LineItem> newItems = new ArrayList<>(response.lineItems());
+            newItems.add(new LineItem("DESIGN_FEE", "Phí thiết kế (+50.000đ)", fee));
+            String newNote = response.breakdownNote() + " | Phí thiết kế: +" + fee + "đ";
+
+            return new CalculatePriceResponse(
+                    response.categoryCode(),
+                    response.vatIncluded(),
+                    response.singleAreaSqm(),
+                    response.totalAreaSqm(),
+                    response.ratePerSqm(),
+                    response.laminationCost(),
+                    response.singleUnitPrice(),
+                    newTotalPrice,
+                    response.currency(),
+                    newItems,
+                    response.appliedRules(),
+                    newNote
+            );
+        }
+
+        return response;
     }
 
     @Override
