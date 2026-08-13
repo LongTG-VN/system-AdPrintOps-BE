@@ -1,5 +1,9 @@
 package com.adprintops.pricing.strategy;
 
+import com.adprintops.pricing.domain.PricingMaterial;
+import com.adprintops.pricing.domain.PricingMaterialRepository;
+import com.adprintops.pricing.domain.PricingRule;
+import com.adprintops.pricing.domain.PricingRuleRepository;
 import com.adprintops.pricing.dto.CalculatePriceRequest;
 import com.adprintops.pricing.dto.CalculatePriceResponse;
 import com.adprintops.pricing.dto.LineItem;
@@ -9,9 +13,19 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Component
 public class HiflexPricingStrategy implements PricingStrategy {
+
+    private final PricingRuleRepository pricingRuleRepository;
+    private final PricingMaterialRepository pricingMaterialRepository;
+
+    public HiflexPricingStrategy(PricingRuleRepository pricingRuleRepository,
+                                 PricingMaterialRepository pricingMaterialRepository) {
+        this.pricingRuleRepository = pricingRuleRepository;
+        this.pricingMaterialRepository = pricingMaterialRepository;
+    }
 
     @Override
     public String getCategoryCode() {
@@ -47,34 +61,43 @@ public class HiflexPricingStrategy implements PricingStrategy {
             tienVaiSingle = new BigDecimal("50000");
             appliedRules.add("HIFLEX_SMALL_TIER_UNDER_0.3M2_50K");
         } else {
-            // Tấm ≥ 0.3m2: Áp dụng bảng đơn giá bậc thang (từ ảnh & quy tắc xưởng)
-            BigDecimal minSide = width.min(height);
-            BigDecimal maxSide = width.max(height);
+            // Check dynamic database rules for HIFLEX
+            List<PricingRule> rules = pricingRuleRepository.findByCategoryCodeOrderByMinAreaSqmAsc("HIFLEX");
+            Optional<PricingRule> matchedRule = rules.stream()
+                    .filter(r -> r.getMinAreaSqm() == null || totalAreaAllItems.compareTo(r.getMinAreaSqm()) >= 0)
+                    .filter(r -> r.getMaxAreaSqm() == null || totalAreaAllItems.compareTo(r.getMaxAreaSqm()) < 0)
+                    .findFirst();
 
-            if (totalAreaAllItems.compareTo(new BigDecimal("10.0")) > 0) {
-                baseRate = new BigDecimal("60000");
-            } else if (totalAreaAllItems.compareTo(new BigDecimal("8.0")) > 0) {
-                baseRate = new BigDecimal("70000");
-            } else if (totalAreaAllItems.compareTo(new BigDecimal("5.0")) > 0) {
-                baseRate = new BigDecimal("80000");
-            } else if (totalAreaAllItems.compareTo(new BigDecimal("3.0")) > 0) {
-                baseRate = new BigDecimal("90000");
-            } else if (minSide.compareTo(BigDecimal.ONE) > 0) {
-                // Hai cạnh đều > 1m
-                baseRate = new BigDecimal("100000");
-            } else if (maxSide.compareTo(BigDecimal.ONE) > 0 && minSide.compareTo(new BigDecimal("0.5")) > 0) {
-                // Một cạnh > 1m, cạnh còn lại > 0.5m
-                baseRate = new BigDecimal("110000");
+            if (matchedRule.isPresent()) {
+                baseRate = matchedRule.get().getPricePerSqm();
+                appliedRules.add("HIFLEX_DB_RULE_" + matchedRule.get().getRuleName());
             } else {
-                // Tấm nhỏ (không đạt các điều kiện trên)
-                baseRate = new BigDecimal("150000");
+                // Rate Matrix Fallback
+                BigDecimal minSide = width.min(height);
+                BigDecimal maxSide = width.max(height);
+
+                if (totalAreaAllItems.compareTo(new BigDecimal("10.0")) > 0) {
+                    baseRate = new BigDecimal("60000");
+                } else if (totalAreaAllItems.compareTo(new BigDecimal("8.0")) > 0) {
+                    baseRate = new BigDecimal("70000");
+                } else if (totalAreaAllItems.compareTo(new BigDecimal("5.0")) > 0) {
+                    baseRate = new BigDecimal("80000");
+                } else if (totalAreaAllItems.compareTo(new BigDecimal("3.0")) > 0) {
+                    baseRate = new BigDecimal("90000");
+                } else if (minSide.compareTo(BigDecimal.ONE) > 0) {
+                    baseRate = new BigDecimal("100000");
+                } else if (maxSide.compareTo(BigDecimal.ONE) > 0 && minSide.compareTo(new BigDecimal("0.5")) > 0) {
+                    baseRate = new BigDecimal("110000");
+                } else {
+                    baseRate = new BigDecimal("150000");
+                }
+                appliedRules.add("HIFLEX_MATRIX_RATE_" + baseRate + "_PER_M2");
             }
 
             if ("xuyenden".equals(type) || "xuyen_den".equals(type)) {
                 baseRate = baseRate.add(new BigDecimal("20000")); // Bạt xuyên đèn +20k/m2
             }
             tienVaiSingle = activeSingleArea.multiply(baseRate).setScale(0, RoundingMode.HALF_UP);
-            appliedRules.add("HIFLEX_MATRIX_RATE_" + baseRate + "_PER_M2");
         }
 
         BigDecimal tienVaiTotal = tienVaiSingle.multiply(BigDecimal.valueOf(quantity)).setScale(0, RoundingMode.HALF_UP);

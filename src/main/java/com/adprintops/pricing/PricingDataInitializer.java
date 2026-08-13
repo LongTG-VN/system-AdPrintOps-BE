@@ -28,11 +28,16 @@ public class PricingDataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        // Always ensure DECAL rules exist in DB
-        if (pricingRuleRepository.findByCategoryCodeOrderByMinAreaSqmAsc("DECAL").isEmpty()) {
-            pricingRuleRepository.save(new PricingRule("DECAL", "Nhỏ lẻ", BigDecimal.ZERO, new BigDecimal("0.100"), new BigDecimal("200000"), new BigDecimal("50000"), true, "Diện tích dưới 0.1m²"));
-            pricingRuleRepository.save(new PricingRule("DECAL", "Khổ nhỏ", new BigDecimal("0.100"), new BigDecimal("1.000"), new BigDecimal("130000"), new BigDecimal("50000"), true, "Diện tích từ 0.1m² đến dưới 1m²"));
-            pricingRuleRepository.save(new PricingRule("DECAL", "Khổ chuẩn", new BigDecimal("1.000"), null, new BigDecimal("120000"), new BigDecimal("50000"), true, "Diện tích từ 1m² trở lên"));
+        // Always ensure HIFLEX rules exist in DB
+        if (pricingRuleRepository.findByCategoryCodeOrderByMinAreaSqmAsc("HIFLEX").isEmpty()) {
+            pricingRuleRepository.save(new PricingRule("HIFLEX", "Tấm nhỏ < 0.2m² (Khoán 35k)", BigDecimal.ZERO, new BigDecimal("0.200"), new BigDecimal("35000"), BigDecimal.ZERO, true, "Khoán 35.000đ/tấm"));
+            pricingRuleRepository.save(new PricingRule("HIFLEX", "Tấm nhỏ < 0.3m² (Khoán 50k)", new BigDecimal("0.200"), new BigDecimal("0.300"), new BigDecimal("50000"), BigDecimal.ZERO, true, "Khoán 50.000đ/tấm"));
+            pricingRuleRepository.save(new PricingRule("HIFLEX", "Tấm nhỏ lẻ (< 1m²)", new BigDecimal("0.300"), new BigDecimal("1.000"), new BigDecimal("150000"), BigDecimal.ZERO, true, "150.000đ/m²"));
+            pricingRuleRepository.save(new PricingRule("HIFLEX", "Khổ chuẩn (1m² - 3m²)", new BigDecimal("1.000"), new BigDecimal("3.000"), new BigDecimal("100000"), BigDecimal.ZERO, true, "100.000đ/m²"));
+            pricingRuleRepository.save(new PricingRule("HIFLEX", "Khổ lớn (3m² - 5m²)", new BigDecimal("3.000"), new BigDecimal("5.000"), new BigDecimal("90000"), BigDecimal.ZERO, true, "90.000đ/m²"));
+            pricingRuleRepository.save(new PricingRule("HIFLEX", "Số lượng lớn (5m² - 8m²)", new BigDecimal("5.000"), new BigDecimal("8.000"), new BigDecimal("80000"), BigDecimal.ZERO, true, "80.000đ/m²"));
+            pricingRuleRepository.save(new PricingRule("HIFLEX", "Sỉ xưởng (8m² - 10m²)", new BigDecimal("8.000"), new BigDecimal("10.000"), new BigDecimal("70000"), BigDecimal.ZERO, true, "70.000đ/m²"));
+            pricingRuleRepository.save(new PricingRule("HIFLEX", "Đơn đại lý (> 10m²)", new BigDecimal("10.000"), null, new BigDecimal("60000"), BigDecimal.ZERO, true, "60.000đ/m²"));
         }
 
         // Seed default rules if empty
