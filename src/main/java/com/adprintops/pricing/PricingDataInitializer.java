@@ -45,6 +45,19 @@ public class PricingDataInitializer implements CommandLineRunner {
             pricingRuleRepository.save(new PricingRule("HIFLEX", "Đơn đại lý (> 10m²)", new BigDecimal("10.000"), null, new BigDecimal("60000"), BigDecimal.ZERO, true, "60.000đ/m²"));
         }
 
+        // Always ensure CAT materials match exact workshop classification
+        List<PricingMaterial> catMaterials = pricingMaterialRepository.findByCategoryCodeAndActiveTrue("CAT");
+        if (catMaterials.size() < 5) {
+            if (!catMaterials.isEmpty()) {
+                pricingMaterialRepository.deleteAll(catMaterials);
+            }
+            pricingMaterialRepository.save(new PricingMaterial("CAT", "decal_si", "Decal màu thường khổ 60 (100.000đ/m²)", BigDecimal.ONE, BigDecimal.ZERO, true));
+            pricingMaterialRepository.save(new PricingMaterial("CAT", "decal_pq", "Decal PQ khổ 60 (150.000đ/m²)", new BigDecimal("1.50"), BigDecimal.ZERO, true));
+            pricingMaterialRepository.save(new PricingMaterial("CAT", "decal_tot", "Decal tốt khổ 120 (150.000đ/m²)", new BigDecimal("1.50"), BigDecimal.ZERO, true));
+            pricingMaterialRepository.save(new PricingMaterial("CAT", "decal_in_be", "Decal in bế khổ 100/120 (200.000đ/m²)", new BigDecimal("2.00"), BigDecimal.ZERO, true));
+            pricingMaterialRepository.save(new PricingMaterial("CAT", "decal_uv", "Decal UV khổ 100/120 (300.000đ/m²)", new BigDecimal("3.00"), BigDecimal.ZERO, true));
+        }
+
         // Seed default rules if empty
         if (pricingRuleRepository.count() == 0) {
             pricingRuleRepository.save(new PricingRule("TEM", "Tem không bế", new BigDecimal("0.001"), new BigDecimal("9999.000"), new BigDecimal("100000"), BigDecimal.ZERO, true, "100k/m2"));

@@ -40,27 +40,27 @@ public class CatPricingStrategy implements PricingStrategy {
 
         BigDecimal[] availableRolls;
 
-        // Map material code to specific rate, roll widths & label from photo
+        // Map material code to specific rate, roll widths & label from user specifications
         if ("decal_pq".equals(matCode) || "da_quang".equals(matCode)) {
-            ratePerSqm = new BigDecimal("200000");
-            matLabel = "Decal PQ khổ 60 (Dạ quang - 1.5 năm)";
+            ratePerSqm = new BigDecimal("150000"); // Decal PQ khổ 60 x 150k
+            matLabel = "Decal PQ khổ 60 (Dạ quang)";
             availableRolls = new BigDecimal[]{new BigDecimal("0.6")};
+        } else if ("decal_tot".equals(matCode) || "decal_tot_1".equals(matCode)) {
+            ratePerSqm = new BigDecimal("150000"); // Decal tốt khổ 120 x 150k
+            matLabel = "Decal tốt khổ 120";
+            availableRolls = new BigDecimal[]{new BigDecimal("1.2")};
         } else if ("decal_in_be".equals(matCode) || "in_be".equals(matCode)) {
-            ratePerSqm = new BigDecimal("200000");
-            matLabel = "Decal in bế khổ 90/100/120 (8 tháng - 1 năm)";
-            availableRolls = new BigDecimal[]{new BigDecimal("0.9"), new BigDecimal("1.0"), new BigDecimal("1.2")};
-        } else if ("decal_tot_1".equals(matCode) || "decal_tot".equals(matCode)) {
-            ratePerSqm = new BigDecimal("150000");
-            matLabel = "Decal tốt 1 lớp khổ 120 (2.5 năm - Nền trắng)";
-            availableRolls = new BigDecimal[]{new BigDecimal("1.2")};
-        } else if ("decal_tot_2".equals(matCode)) {
-            ratePerSqm = new BigDecimal("300000");
-            matLabel = "Decal tốt 2 lớp khổ 120 (2.5 năm)";
-            availableRolls = new BigDecimal[]{new BigDecimal("1.2")};
+            ratePerSqm = new BigDecimal("200000"); // Decal in bế khổ 100, 120 x 200k
+            matLabel = "Decal in bế khổ 100/120";
+            availableRolls = new BigDecimal[]{new BigDecimal("1.0"), new BigDecimal("1.2")};
+        } else if ("decal_uv".equals(matCode) || "decal_tot_2".equals(matCode)) {
+            ratePerSqm = new BigDecimal("300000"); // Decal UV khổ 100, 120 x 300k
+            matLabel = "Decal UV khổ 100/120";
+            availableRolls = new BigDecimal[]{new BigDecimal("1.0"), new BigDecimal("1.2")};
         } else {
-            // Default: Decal si (3 tháng) khổ 60 x 100k
+            // Default: Decal màu thường khổ 60 x 100k
             ratePerSqm = new BigDecimal("100000");
-            matLabel = "Decal si (3 tháng) khổ 60";
+            matLabel = "Decal màu thường khổ 60";
             availableRolls = new BigDecimal[]{new BigDecimal("0.6")};
         }
 
@@ -94,49 +94,59 @@ public class CatPricingStrategy implements PricingStrategy {
             lineItems.add(new LineItem("CUT_LE", "Cắt decal lẻ " + matLabel + " khổ " + tacRoll + " tấc (" + tacCount + " tấc @ " + pricePerTac + "đ/tấc)", totalPrice));
             note = "Cắt Decal Lẻ | " + matLabel + " | Khổ " + tacRoll + " tấc";
         } else {
-            // Cut standard per m² with ROLL FITTING & AREA ROUNDING (<= 0.10 => 0.20, > 0.10 => làm tròn lên mỗi 0.10m²)
-            BigDecimal rawRollArea = calculateBillableRollArea(width, height, availableRolls);
-            BigDecimal billableRollArea = DecalPricingStrategy.roundUpAreaToTenths(rawRollArea);
+            // Cut standard per m² with ROLL FITTING & AREA ROUNDING
+            RollFitDetail fit = calculateRollFittingDetails(width, height, availableRolls);
+            BigDecimal billableRollArea = DecalPricingStrategy.roundUpAreaToTenths(fit.rawArea());
 
             singleUnitPrice = billableRollArea.multiply(ratePerSqm).setScale(0, RoundingMode.HALF_UP);
             totalPrice = singleUnitPrice.multiply(BigDecimal.valueOf(quantity)).setScale(0, RoundingMode.HALF_UP);
             appliedRules.add("CAT_MATERIAL_" + matCode.toUpperCase() + "_ROLL_FITTING");
-            lineItems.add(new LineItem("CUT_CHUAN", "Cắt " + matLabel + " (Dô khổ/làm tròn: " + billableRollArea + "m² @ " + ratePerSqm + "đ/m²)", totalPrice));
-            note = "Cắt Decal | " + matLabel + " | Kích thước: " + width + "m x " + height + "m (Làm tròn diện tích: " + billableRollArea + "m²)";
+            lineItems.add(new LineItem("CUT_CHUAN", "Cắt " + matLabel + " (Vô khổ " + fit.rollWidth() + "m x " + fit.cutLength() + "m = " + billableRollArea + "m² @ " + ratePerSqm + "đ/m²)", totalPrice));
+            note = "Cắt Decal | " + matLabel + " | Kích thước: " + width + "m x " + height + "m (Vô khổ cuộn " + fit.rollWidth() + "m x " + fit.cutLength() + "m = " + billableRollArea + "m²)";
         }
 
-        BigDecimal billableTotalArea = DecalPricingStrategy.roundUpAreaToTenths(calculateBillableRollArea(width, height, availableRolls)).multiply(BigDecimal.valueOf(quantity));
+        RollFitDetail fitDetail = calculateRollFittingDetails(width, height, availableRolls);
+        BigDecimal billableTotalArea = DecalPricingStrategy.roundUpAreaToTenths(fitDetail.rawArea()).multiply(BigDecimal.valueOf(quantity));
 
         return new CalculatePriceResponse(
                 "CAT", false, realSingleArea, billableTotalArea, ratePerSqm, BigDecimal.ZERO, singleUnitPrice, totalPrice, "VND", lineItems, appliedRules, note
         );
     }
 
-    private BigDecimal calculateBillableRollArea(BigDecimal width, BigDecimal height, BigDecimal[] availableRolls) {
+    public record RollFitDetail(BigDecimal rollWidth, BigDecimal cutLength, BigDecimal rawArea) {}
+
+    private RollFitDetail calculateRollFittingDetails(BigDecimal width, BigDecimal height, BigDecimal[] availableRolls) {
         BigDecimal minArea = new BigDecimal("999999");
+        BigDecimal bestRoll = availableRolls[0];
+        BigDecimal bestLength = width.min(height);
 
         for (BigDecimal r : availableRolls) {
-            // Orientation 1: width fits across roll r
             if (width.compareTo(r) <= 0) {
                 BigDecimal area1 = r.multiply(height);
                 if (area1.compareTo(minArea) < 0) {
                     minArea = area1;
+                    bestRoll = r;
+                    bestLength = height;
                 }
             }
-            // Orientation 2: height fits across roll r
             if (height.compareTo(r) <= 0) {
                 BigDecimal area2 = r.multiply(width);
                 if (area2.compareTo(minArea) < 0) {
                     minArea = area2;
+                    bestRoll = r;
+                    bestLength = width;
                 }
             }
         }
 
-        // Fallback if item is larger than available rolls
         if (minArea.compareTo(new BigDecimal("999999")) == 0) {
-            minArea = width.multiply(height);
+            BigDecimal maxR = availableRolls[availableRolls.length - 1];
+            BigDecimal maxDim = width.max(height);
+            bestRoll = maxR;
+            bestLength = maxDim;
+            minArea = maxR.multiply(maxDim);
         }
 
-        return minArea.setScale(4, RoundingMode.HALF_UP);
+        return new RollFitDetail(bestRoll, bestLength.setScale(2, RoundingMode.HALF_UP), minArea.setScale(4, RoundingMode.HALF_UP));
     }
 }
