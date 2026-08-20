@@ -104,50 +104,67 @@ public class DecalPricingStrategy implements PricingStrategy {
 
         BigDecimal totalAreaSqm = billableSingleArea.multiply(BigDecimal.valueOf(quantity)).setScale(4, RoundingMode.HALF_UP);
 
-        List<PricingRule> matchingRules = pricingRuleRepository.findMatchingRules("DECAL", totalAreaSqm);
         BigDecimal baseRate;
         String ruleName;
 
-        if (!matchingRules.isEmpty()) {
-            PricingRule rule = matchingRules.getFirst();
-            baseRate = rule.getPricePerSqm();
-            ruleName = rule.getRuleName();
-        } else {
-            // Fallback calculation matching shop's total order area tiers
-            if (totalAreaSqm.compareTo(new BigDecimal("15.0")) >= 0) {
-                baseRate = new BigDecimal("80000");
-                ruleName = "DECAL_TIER_GE_15M2";
-            } else if (totalAreaSqm.compareTo(new BigDecimal("10.0")) >= 0) {
-                baseRate = new BigDecimal("90000");
-                ruleName = "DECAL_TIER_GE_10M2";
-            } else if (totalAreaSqm.compareTo(new BigDecimal("5.0")) >= 0) {
+        if ("uv".equals(matCode)) {
+            BigDecimal minSide = width.min(height);
+            if (minSide.compareTo(new BigDecimal("0.30")) < 0) {
                 baseRate = new BigDecimal("100000");
-                ruleName = "DECAL_TIER_GE_5M2";
-            } else if (totalAreaSqm.compareTo(new BigDecimal("3.0")) >= 0) {
-                baseRate = new BigDecimal("110000");
-                ruleName = "DECAL_TIER_GE_3M2";
-            } else if (totalAreaSqm.compareTo(new BigDecimal("0.5")) >= 0) {
-                baseRate = new BigDecimal("130000");
-                ruleName = "DECAL_TIER_UNDER_3M2";
+                ruleName = "DECAL_UV_MIN_SIDE_UNDER_30CM";
+            } else if (billableSingleArea.compareTo(BigDecimal.ONE) < 0) {
+                baseRate = new BigDecimal("260000");
+                ruleName = "DECAL_UV_UNDER_1M2";
+            } else if (billableSingleArea.compareTo(new BigDecimal("3.0")) < 0) {
+                baseRate = new BigDecimal("220000");
+                ruleName = "DECAL_UV_1M2_TO_3M2";
             } else {
                 baseRate = new BigDecimal("200000");
-                ruleName = "DECAL_TIER_UNDER_0.5M2";
+                ruleName = "DECAL_UV_GE_3M2";
             }
-        }
+        } else {
+            List<PricingRule> matchingRules = pricingRuleRepository.findMatchingRules("DECAL", totalAreaSqm);
+            if (!matchingRules.isEmpty()) {
+                PricingRule rule = matchingRules.getFirst();
+                baseRate = rule.getPricePerSqm();
+                ruleName = rule.getRuleName();
+            } else {
+                // Fallback calculation matching shop's total order area tiers
+                if (totalAreaSqm.compareTo(new BigDecimal("15.0")) >= 0) {
+                    baseRate = new BigDecimal("80000");
+                    ruleName = "DECAL_TIER_GE_15M2";
+                } else if (totalAreaSqm.compareTo(new BigDecimal("10.0")) >= 0) {
+                    baseRate = new BigDecimal("90000");
+                    ruleName = "DECAL_TIER_GE_10M2";
+                } else if (totalAreaSqm.compareTo(new BigDecimal("5.0")) >= 0) {
+                    baseRate = new BigDecimal("100000");
+                    ruleName = "DECAL_TIER_GE_5M2";
+                } else if (totalAreaSqm.compareTo(new BigDecimal("3.0")) >= 0) {
+                    baseRate = new BigDecimal("110000");
+                    ruleName = "DECAL_TIER_GE_3M2";
+                } else if (totalAreaSqm.compareTo(new BigDecimal("0.5")) >= 0) {
+                    baseRate = new BigDecimal("130000");
+                    ruleName = "DECAL_TIER_UNDER_3M2";
+                } else {
+                    baseRate = new BigDecimal("200000");
+                    ruleName = "DECAL_TIER_UNDER_0.5M2";
+                }
+            }
 
-        // Volume discounts for large total area (>= 3m², >= 5m², >= 10m², >= 15m²)
-        if (totalAreaSqm.compareTo(new BigDecimal("15.0")) >= 0) {
-            baseRate = baseRate.min(new BigDecimal("80000"));
-            ruleName = "DECAL_VO_15M2";
-        } else if (totalAreaSqm.compareTo(new BigDecimal("10.0")) >= 0) {
-            baseRate = baseRate.min(new BigDecimal("90000"));
-            ruleName = "DECAL_VO_10M2";
-        } else if (totalAreaSqm.compareTo(new BigDecimal("5.0")) >= 0) {
-            baseRate = baseRate.min(new BigDecimal("100000"));
-            ruleName = "DECAL_VO_5M2";
-        } else if (totalAreaSqm.compareTo(new BigDecimal("3.0")) >= 0) {
-            baseRate = baseRate.min(new BigDecimal("110000"));
-            ruleName = "DECAL_VO_3M2";
+            // Volume discounts for large total area (>= 3m², >= 5m², >= 10m², >= 15m²)
+            if (totalAreaSqm.compareTo(new BigDecimal("15.0")) >= 0) {
+                baseRate = baseRate.min(new BigDecimal("80000"));
+                ruleName = "DECAL_VO_15M2";
+            } else if (totalAreaSqm.compareTo(new BigDecimal("10.0")) >= 0) {
+                baseRate = baseRate.min(new BigDecimal("90000"));
+                ruleName = "DECAL_VO_10M2";
+            } else if (totalAreaSqm.compareTo(new BigDecimal("5.0")) >= 0) {
+                baseRate = baseRate.min(new BigDecimal("100000"));
+                ruleName = "DECAL_VO_5M2";
+            } else if (totalAreaSqm.compareTo(new BigDecimal("3.0")) >= 0) {
+                baseRate = baseRate.min(new BigDecimal("110000"));
+                ruleName = "DECAL_VO_3M2";
+            }
         }
 
         BigDecimal multiplier = BigDecimal.ONE;
