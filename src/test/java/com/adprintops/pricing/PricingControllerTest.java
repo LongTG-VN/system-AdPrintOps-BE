@@ -145,7 +145,7 @@ public class PricingControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonPayload))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.totalPrice").value(120000));
+                .andExpect(jsonPath("$.totalPrice").value(130000));
     }
 
     @Test

@@ -102,7 +102,7 @@ public class DecalPricingStrategy implements PricingStrategy {
 
         BigDecimal totalAreaSqm = billableSingleArea.multiply(BigDecimal.valueOf(quantity)).setScale(4, RoundingMode.HALF_UP);
 
-        List<PricingRule> matchingRules = pricingRuleRepository.findMatchingRules("DECAL", billableSingleArea);
+        List<PricingRule> matchingRules = pricingRuleRepository.findMatchingRules("DECAL", totalAreaSqm);
         BigDecimal baseRate;
         String ruleName;
 
@@ -111,16 +111,25 @@ public class DecalPricingStrategy implements PricingStrategy {
             baseRate = rule.getPricePerSqm();
             ruleName = rule.getRuleName();
         } else {
-            // Fallback calculation directly matching the shop's tiered pricing matrix from UI note
-            if (billableSingleArea.compareTo(new BigDecimal("0.10")) < 0) {
-                baseRate = new BigDecimal("200000");
-                ruleName = "DECAL_UNDER_0.1M2";
-            } else if (billableSingleArea.compareTo(BigDecimal.ONE) < 0) {
+            // Fallback calculation matching shop's total order area tiers
+            if (totalAreaSqm.compareTo(new BigDecimal("15.0")) >= 0) {
+                baseRate = new BigDecimal("80000");
+                ruleName = "DECAL_TIER_GE_15M2";
+            } else if (totalAreaSqm.compareTo(new BigDecimal("10.0")) >= 0) {
+                baseRate = new BigDecimal("90000");
+                ruleName = "DECAL_TIER_GE_10M2";
+            } else if (totalAreaSqm.compareTo(new BigDecimal("5.0")) >= 0) {
+                baseRate = new BigDecimal("100000");
+                ruleName = "DECAL_TIER_GE_5M2";
+            } else if (totalAreaSqm.compareTo(new BigDecimal("3.0")) >= 0) {
+                baseRate = new BigDecimal("110000");
+                ruleName = "DECAL_TIER_GE_3M2";
+            } else if (totalAreaSqm.compareTo(new BigDecimal("0.5")) >= 0) {
                 baseRate = new BigDecimal("130000");
-                ruleName = "DECAL_UNDER_1M2";
+                ruleName = "DECAL_TIER_UNDER_3M2";
             } else {
-                baseRate = new BigDecimal("120000");
-                ruleName = "DECAL_STANDARD";
+                baseRate = new BigDecimal("200000");
+                ruleName = "DECAL_TIER_UNDER_0.5M2";
             }
         }
 

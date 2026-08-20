@@ -45,6 +45,20 @@ public class PricingDataInitializer implements CommandLineRunner {
             pricingRuleRepository.save(new PricingRule("HIFLEX", "Đơn đại lý (> 10m²)", new BigDecimal("10.000"), null, new BigDecimal("60000"), BigDecimal.ZERO, true, "60.000đ/m²"));
         }
 
+        // Always ensure DECAL has all multi-tier rules in DB matching the UI table
+        List<PricingRule> existingDecalRules = pricingRuleRepository.findByCategoryCodeOrderByMinAreaSqmAsc("DECAL");
+        if (existingDecalRules.size() <= 1) {
+            if (!existingDecalRules.isEmpty()) {
+                pricingRuleRepository.deleteAll(existingDecalRules);
+            }
+            pricingRuleRepository.save(new PricingRule("DECAL", "Decal in < 0.5m2", new BigDecimal("0.001"), new BigDecimal("0.500"), new BigDecimal("200000"), BigDecimal.ZERO, true, "200.000đ/m²"));
+            pricingRuleRepository.save(new PricingRule("DECAL", "Decal in < 3m2", new BigDecimal("0.501"), new BigDecimal("3.000"), new BigDecimal("130000"), BigDecimal.ZERO, true, "130.000đ/m²"));
+            pricingRuleRepository.save(new PricingRule("DECAL", "Decal in >= 3m2", new BigDecimal("3.001"), new BigDecimal("5.000"), new BigDecimal("110000"), BigDecimal.ZERO, true, "110.000đ/m²"));
+            pricingRuleRepository.save(new PricingRule("DECAL", "Decal in >= 5m2", new BigDecimal("5.001"), new BigDecimal("10.000"), new BigDecimal("100000"), BigDecimal.ZERO, true, "100.000đ/m²"));
+            pricingRuleRepository.save(new PricingRule("DECAL", "Decal in >= 10m2", new BigDecimal("10.001"), new BigDecimal("15.000"), new BigDecimal("90000"), BigDecimal.ZERO, true, "90.000đ/m²"));
+            pricingRuleRepository.save(new PricingRule("DECAL", "Decal in >= 15m2", new BigDecimal("15.001"), new BigDecimal("9999.000"), new BigDecimal("80000"), BigDecimal.ZERO, true, "80.000đ/m²"));
+        }
+
         // Always ensure CAT materials match exact workshop classification
         List<PricingMaterial> catMaterials = pricingMaterialRepository.findByCategoryCodeAndActiveTrue("CAT");
         if (catMaterials.size() < 5) {
