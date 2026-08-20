@@ -234,12 +234,24 @@ public class PricingDataInitializer implements CommandLineRunner {
         saveConfigIfMissing("GIAY", "ROI_A5_200_20000", "Tờ rơi A5 200g (20.000 tờ)", new BigDecimal("5180000"), "A5 200g 20000t");
 
         // TRANH
-        saveConfigIfMissing("TRANH", "LED_A4_FULL", "Tranh LED A4 full", new BigDecimal("790000"), "LED A4 Full");
-        saveConfigIfMissing("TRANH", "LED_A4_IN", "Tranh LED A4 chỉ in", new BigDecimal("90000"), "LED A4 In");
-        saveConfigIfMissing("TRANH", "LED_A3_FULL", "Tranh LED A3 full", new BigDecimal("905000"), "LED A3 Full");
-        saveConfigIfMissing("TRANH", "LED_A3_IN", "Tranh LED A3 chỉ in", new BigDecimal("100000"), "LED A3 In");
-        saveConfigIfMissing("TRANH", "LED_A2_FULL", "Tranh LED A2 full", new BigDecimal("1120000"), "LED A2 Full");
-        saveConfigIfMissing("TRANH", "LED_A2_IN", "Tranh LED A2 chỉ in", new BigDecimal("115000"), "LED A2 In");
+        saveConfigIfMissing("TRANH", "LED_A4_FULL", "Tranh LED A4 full (20x30cm)", new BigDecimal("790000"), "LED A4 Full");
+        saveConfigIfMissing("TRANH", "LED_A4_IN", "Tranh LED A4 chỉ in (20x30cm)", new BigDecimal("90000"), "LED A4 In");
+        saveConfigIfMissing("TRANH", "LED_A3_FULL", "Tranh LED A3 full (30x40cm)", new BigDecimal("905000"), "LED A3 Full");
+        saveConfigIfMissing("TRANH", "LED_A3_IN", "Tranh LED A3 chỉ in (30x40cm)", new BigDecimal("100000"), "LED A3 In");
+        saveConfigIfMissing("TRANH", "LED_A2_FULL", "Tranh LED A2 full (40x60cm)", new BigDecimal("1120000"), "LED A2 Full");
+        saveConfigIfMissing("TRANH", "LED_A2_IN", "Tranh LED A2 chỉ in (40x60cm)", new BigDecimal("115000"), "LED A2 In");
+        saveConfigIfMissing("TRANH", "LED_A1_FULL", "Tranh LED A1 full (60x80cm)", new BigDecimal("1540000"), "LED A1 Full");
+        saveConfigIfMissing("TRANH", "LED_A1_IN", "Tranh LED A1 chỉ in (60x80cm)", new BigDecimal("160000"), "LED A1 In");
+        saveConfigIfMissing("TRANH", "LED_50X70_FULL", "Tranh LED 50x70cm full", new BigDecimal("1450000"), "LED 50x70 Full");
+        saveConfigIfMissing("TRANH", "LED_50X70_IN", "Tranh LED 50x70cm chỉ in", new BigDecimal("140000"), "LED 50x70 In");
+        saveConfigIfMissing("TRANH", "LED_60X90_FULL", "Tranh LED 60x90cm full", new BigDecimal("1631000"), "LED 60x90 Full");
+        saveConfigIfMissing("TRANH", "LED_60X90_IN", "Tranh LED 60x90cm chỉ in", new BigDecimal("170000"), "LED 60x90 In");
+        saveConfigIfMissing("TRANH", "LED_30X120_FULL", "Tranh LED 30x120cm full", new BigDecimal("1654000"), "LED 30x120 Full");
+        saveConfigIfMissing("TRANH", "LED_30X120_IN", "Tranh LED 30x120cm chỉ in", new BigDecimal("139000"), "LED 30x120 In");
+        saveConfigIfMissing("TRANH", "LED_60X120_FULL", "Tranh LED 60x120cm full", new BigDecimal("1908000"), "LED 60x120 Full");
+        saveConfigIfMissing("TRANH", "LED_60X120_IN", "Tranh LED 60x120cm chỉ in", new BigDecimal("193000"), "LED 60x120 In");
+        saveConfigIfMissing("TRANH", "LED_80X120_FULL", "Tranh LED 80x120cm full", new BigDecimal("2194000"), "LED 80x120 Full");
+        saveConfigIfMissing("TRANH", "LED_80X120_IN", "Tranh LED 80x120cm chỉ in", new BigDecimal("229000"), "LED 80x120 In");
 
         saveConfigIfMissing("TRANH", "SN_25X15_ANMON", "Số nhà 25x15 Ăn mòn", new BigDecimal("450000"), "25x15 Ăn mòn");
         saveConfigIfMissing("TRANH", "SN_25X15_NOI", "Số nhà 25x15 Số nổi", new BigDecimal("550000"), "25x15 Số nổi");

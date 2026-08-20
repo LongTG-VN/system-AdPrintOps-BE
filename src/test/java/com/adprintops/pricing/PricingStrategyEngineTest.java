@@ -170,4 +170,24 @@ public class PricingStrategyEngineTest {
         assertEquals(new BigDecimal("95000"), response.singleUnitPrice());
         assertEquals(new BigDecimal("380000"), response.totalPrice()); // 4 * 95k = 380k
     }
+
+    @Test
+    void testTranhPricing_60x120And80x120Presets() {
+        pricingConfigurationRepository.save(new PricingConfiguration("TRANH", "LED_60X120_FULL", "Tranh LED 60x120cm full", new BigDecimal("1908000"), BigDecimal.ONE, true, "1908k"));
+        pricingConfigurationRepository.save(new PricingConfiguration("TRANH", "LED_80X120_IN", "Tranh LED 80x120cm chỉ in", new BigDecimal("229000"), BigDecimal.ONE, true, "229k"));
+
+        CalculatePriceRequest req1 = new CalculatePriceRequest(
+                "TRANH", null, null, 1, null, false, false, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, "tranh_dien", "60X120", "full", null, null
+        );
+        CalculatePriceResponse resp1 = pricingService.calculatePrice(req1);
+        assertEquals(new BigDecimal("1908000"), resp1.totalPrice());
+
+        CalculatePriceRequest req2 = new CalculatePriceRequest(
+                "TRANH", null, null, 2, null, false, false, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, "tranh_dien", "80X120", "in", null, null
+        );
+        CalculatePriceResponse resp2 = pricingService.calculatePrice(req2);
+        assertEquals(new BigDecimal("458000"), resp2.totalPrice()); // 2 * 229k = 458k
+    }
 }
