@@ -61,7 +61,9 @@ public record CalculatePriceRequest(
 
         @Min(value = 0, message = "Eyelet count must be non-negative")
         Integer eyeletCount, // 2.000đ/cái (tặng 4 khoen nếu đơn > 150k)
-        String polePocketMode // none, top_bottom, left_right, all_4 (+5cm lề keo mỗi cạnh)
+        String polePocketMode, // none, top_bottom, left_right, all_4 (+5cm lề keo mỗi cạnh)
+        String hastagThickness, // 3li, 5li
+        Boolean hasCncCut // true/false (+20.000đ/cái)
 ) {
     public CalculatePriceRequest(
             String categoryCode,
@@ -78,7 +80,7 @@ public record CalculatePriceRequest(
             BigDecimal customFee
     ) {
         this(categoryCode, widthM, heightM, quantity, materialCode, hasLamination, hasDieCut, boxCount, frameTubeSize, paperGsm, sheetCount, customFee,
-                null, null, null, null, null, null, null, null, null, null, null, null, null);
+                null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
     }
 
     public CalculatePriceRequest(
@@ -107,7 +109,38 @@ public record CalculatePriceRequest(
             String tranhPackage
     ) {
         this(categoryCode, widthM, heightM, quantity, materialCode, hasLamination, hasDieCut, boxCount, frameTubeSize, paperGsm, sheetCount, customFee,
-                cutMode, maxSideM, rollWidthTac, hiflexType, marginCm, hasLeg, paperSubtype, paperSides, tranhType, tranhPreset, tranhPackage, null, null);
+                cutMode, maxSideM, rollWidthTac, hiflexType, marginCm, hasLeg, paperSubtype, paperSides, tranhType, tranhPreset, tranhPackage, null, null, null, null);
+    }
+
+    public CalculatePriceRequest(
+            String categoryCode,
+            BigDecimal widthM,
+            BigDecimal heightM,
+            Integer quantity,
+            String materialCode,
+            Boolean hasLamination,
+            Boolean hasDieCut,
+            Integer boxCount,
+            Integer frameTubeSize,
+            Integer paperGsm,
+            Integer sheetCount,
+            BigDecimal customFee,
+            String cutMode,
+            BigDecimal maxSideM,
+            Integer rollWidthTac,
+            String hiflexType,
+            Integer marginCm,
+            Boolean hasLeg,
+            String paperSubtype,
+            Integer paperSides,
+            String tranhType,
+            String tranhPreset,
+            String tranhPackage,
+            Integer eyeletCount,
+            String polePocketMode
+    ) {
+        this(categoryCode, widthM, heightM, quantity, materialCode, hasLamination, hasDieCut, boxCount, frameTubeSize, paperGsm, sheetCount, customFee,
+                cutMode, maxSideM, rollWidthTac, hiflexType, marginCm, hasLeg, paperSubtype, paperSides, tranhType, tranhPreset, tranhPackage, eyeletCount, polePocketMode, null, null);
     }
 
     @JsonIgnore
@@ -121,7 +154,7 @@ public record CalculatePriceRequest(
         boolean hasDimensions = widthM != null && heightM != null;
 
         return switch (categoryCode.toUpperCase()) {
-            case "DECAL", "TEM", "CAT", "BANG", "HIFLEX" -> hasDimensions && hasQuantity;
+            case "DECAL", "TEM", "CAT", "BANG", "HIFLEX", "HASTAG" -> hasDimensions && hasQuantity;
             case "CARD" -> hasQuantity || (boxCount != null && boxCount > 0);
             case "GIAY", "TRANH", "KHAC" -> hasQuantity;
             default -> true;

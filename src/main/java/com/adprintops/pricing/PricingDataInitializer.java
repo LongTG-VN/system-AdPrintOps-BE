@@ -70,6 +70,16 @@ public class PricingDataInitializer implements CommandLineRunner {
             pricingMaterialRepository.save(new PricingMaterial("DECAL", "uv", "In Decal công nghệ UV (Cao cấp)", BigDecimal.ONE, BigDecimal.ZERO, true));
         }
 
+        // Always ensure HASTAG materials exist in DB
+        List<PricingMaterial> hastagMaterials = pricingMaterialRepository.findByCategoryCodeAndActiveTrue("HASTAG");
+        if (hastagMaterials.size() < 2) {
+            if (!hastagMaterials.isEmpty()) {
+                pricingMaterialRepository.deleteAll(hastagMaterials);
+            }
+            pricingMaterialRepository.save(new PricingMaterial("HASTAG", "3li", "Hastag Formex 3li (3mm)", BigDecimal.ONE, BigDecimal.ZERO, true));
+            pricingMaterialRepository.save(new PricingMaterial("HASTAG", "5li", "Hastag Formex 5li (5mm)", BigDecimal.ONE, BigDecimal.ZERO, true));
+        }
+
         // Always ensure CAT materials match exact workshop classification
         List<PricingMaterial> catMaterials = pricingMaterialRepository.findByCategoryCodeAndActiveTrue("CAT");
         if (catMaterials.size() < 5) {

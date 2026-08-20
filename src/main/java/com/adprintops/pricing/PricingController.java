@@ -57,7 +57,9 @@ public class PricingController {
                 request.tranhPreset(),
                 request.tranhPackage(),
                 request.eyeletCount(),
-                request.polePocketMode()
+                request.polePocketMode(),
+                request.hastagThickness(),
+                request.hasCncCut()
         );
         CalculatePriceResponse response = pricingService.calculatePrice(fullRequest);
         return ResponseEntity.ok(response);

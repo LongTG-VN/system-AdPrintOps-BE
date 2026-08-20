@@ -139,7 +139,8 @@ public class PricingStrategyEngineTest {
         // Null combination 25x15 ANMON -> must throw 422 PricingConfigurationException
         CalculatePriceRequest reqNull = new CalculatePriceRequest(
                 "TRANH", null, null, 1, "anmon", false, false, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, "so_nha", "25X15", "anmon"
+                null, null, null, null, null, null, null, null, "so_nha", "25X15", "anmon",
+                null, null
         );
         assertThrows(PricingConfigurationException.class, () -> pricingService.calculatePrice(reqNull));
     }
@@ -148,8 +149,25 @@ public class PricingStrategyEngineTest {
     void testCalculateKhacMissingConfigThrows422() {
         CalculatePriceRequest request = new CalculatePriceRequest(
                 "KHAC", new BigDecimal("1.0"), new BigDecimal("1.0"), 1, "non_existent_service", false, false, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null, null
+                null, null, null, null, null, null, null, null, null, null, null, null, null
         );
         assertThrows(PricingConfigurationException.class, () -> pricingService.calculatePrice(request));
+    }
+
+    @Test
+    void testHastagPricing_CalculationWithCncAndDiscount() {
+        CalculatePriceRequest request = new CalculatePriceRequest(
+                "HASTAG", new BigDecimal("0.20"), new BigDecimal("0.30"), 4,
+                null, null, null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, null, "5li", true
+        );
+
+        CalculatePriceResponse response = pricingService.calculatePrice(request);
+
+        assertNotNull(response);
+        assertEquals("HASTAG", response.categoryCode());
+        // 20x30 5li = 85k + CNC 20k = 105k - Qty >= 4 discount 10k/item = 95k/item
+        assertEquals(new BigDecimal("95000"), response.singleUnitPrice());
+        assertEquals(new BigDecimal("380000"), response.totalPrice()); // 4 * 95k = 380k
     }
 }
