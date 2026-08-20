@@ -59,6 +59,16 @@ public class PricingDataInitializer implements CommandLineRunner {
             pricingRuleRepository.save(new PricingRule("DECAL", "Decal in >= 15m2", new BigDecimal("15.001"), new BigDecimal("9999.000"), new BigDecimal("80000"), BigDecimal.ZERO, true, "80.000đ/m²"));
         }
 
+        // Always ensure DECAL materials match equal pricing requirement (Decal đục = Decal trong)
+        List<PricingMaterial> decalMaterials = pricingMaterialRepository.findByCategoryCodeAndActiveTrue("DECAL");
+        if (decalMaterials.size() < 2 || decalMaterials.stream().anyMatch(m -> m.getMultiplier().compareTo(BigDecimal.ONE) > 0)) {
+            if (!decalMaterials.isEmpty()) {
+                pricingMaterialRepository.deleteAll(decalMaterials);
+            }
+            pricingMaterialRepository.save(new PricingMaterial("DECAL", "duc", "Decal in đục (màu) (Khổ cuộn max 1m52)", BigDecimal.ONE, BigDecimal.ZERO, true));
+            pricingMaterialRepository.save(new PricingMaterial("DECAL", "trong", "Decal in trong (Khổ cuộn max 1m27)", BigDecimal.ONE, BigDecimal.ZERO, true));
+        }
+
         // Always ensure CAT materials match exact workshop classification
         List<PricingMaterial> catMaterials = pricingMaterialRepository.findByCategoryCodeAndActiveTrue("CAT");
         if (catMaterials.size() < 5) {

@@ -54,7 +54,7 @@ public class PricingControllerTest {
                 "DECAL", "thuong", "Decal thường", BigDecimal.ONE, BigDecimal.ZERO, true
         ));
         pricingMaterialRepository.save(new PricingMaterial(
-                "DECAL", "trong", "Decal trong / đẹp", new BigDecimal("1.50"), BigDecimal.ZERO, true
+                "DECAL", "trong", "Decal trong / đẹp", BigDecimal.ONE, BigDecimal.ZERO, true
         ));
     }
 
@@ -96,9 +96,9 @@ public class PricingControllerTest {
                         .content(jsonPayload))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.singleAreaSqm").value(2.0))
-                .andExpect(jsonPath("$.ratePerSqm").value(180000))
+                .andExpect(jsonPath("$.ratePerSqm").value(120000))
                 .andExpect(jsonPath("$.laminationCost").value(100000))
-                .andExpect(jsonPath("$.totalPrice").value(460000));
+                .andExpect(jsonPath("$.totalPrice").value(340000));
     }
 
     @Test

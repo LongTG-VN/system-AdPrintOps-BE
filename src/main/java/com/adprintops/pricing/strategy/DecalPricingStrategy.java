@@ -14,6 +14,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Component
 public class DecalPricingStrategy implements PricingStrategy {
@@ -67,17 +68,18 @@ public class DecalPricingStrategy implements PricingStrategy {
             );
         }
 
-        // Standard Decal print shop rolls: 0.9m, 1.0m, 1.07m, 1.27m, 1.52m
+        String matCode = (request.materialCode() != null && !request.materialCode().isBlank())
+                ? request.materialCode().toLowerCase() : "thuong";
+
+        // Decal đục (sữa): rolls 0.9m, 1.0m, 1.07m, 1.27m, 1.52m
+        // Decal trong: rolls 0.9m, 1.0m, 1.07m, 1.27m (Decal trong KHÔNG CÓ CÂY 150cm!)
+        List<BigDecimal> rolls = "trong".equals(matCode)
+                ? List.of(new BigDecimal("0.90"), BigDecimal.ONE, new BigDecimal("1.07"), new BigDecimal("1.27"))
+                : List.of(new BigDecimal("0.90"), BigDecimal.ONE, new BigDecimal("1.07"), new BigDecimal("1.27"), new BigDecimal("1.52"));
+
         BigDecimal matchedRoll = null;
         if (realSingleArea.compareTo(new BigDecimal("0.1")) >= 0) {
             BigDecimal bestArea = null;
-            List<BigDecimal> rolls = List.of(
-                    new BigDecimal("0.90"),
-                    BigDecimal.ONE,
-                    new BigDecimal("1.07"),
-                    new BigDecimal("1.27"),
-                    new BigDecimal("1.52")
-            );
             for (BigDecimal roll : rolls) {
                 if (width.compareTo(roll) <= 0) {
                     BigDecimal area = roll.multiply(height);
@@ -148,22 +150,22 @@ public class DecalPricingStrategy implements PricingStrategy {
             ruleName = "DECAL_VO_3M2";
         }
 
-        String matCode = (request.materialCode() != null && !request.materialCode().isBlank())
-                ? request.materialCode().toLowerCase() : "thuong";
+        BigDecimal multiplier = BigDecimal.ONE;
+        BigDecimal extraBasePrice = BigDecimal.ZERO;
+        String matName = "trong".equals(matCode) ? "Decal in trong" : "Decal in đục";
 
-        PricingMaterial material = pricingMaterialRepository
-                .findByCategoryCodeAndMaterialCodeAndActiveTrue("DECAL", matCode)
-                .orElseThrow(() -> new PricingConfigurationException(
-                        "Chưa có vật liệu DECAL đang hoạt động với mã " + matCode
-                ));
-
-        BigDecimal effectiveRate = baseRate
-                .multiply(material.getMultiplier())
-                .add(material.getBasePrice());
-        String matName = material.getMaterialName();
-        if ("thuong".equals(matCode) || "decal".equals(matCode) || "in".equals(matCode)) {
-            matName = "Decal in";
+        Optional<PricingMaterial> optMaterial = pricingMaterialRepository.findByCategoryCodeAndMaterialCodeAndActiveTrue("DECAL", matCode);
+        if (optMaterial.isPresent()) {
+            matName = optMaterial.get().getMaterialName();
+            if (optMaterial.get().getMultiplier() != null) {
+                multiplier = optMaterial.get().getMultiplier();
+            }
+            if (optMaterial.get().getBasePrice() != null) {
+                extraBasePrice = optMaterial.get().getBasePrice();
+            }
         }
+
+        BigDecimal effectiveRate = baseRate.multiply(multiplier).add(extraBasePrice);
 
         List<LineItem> lineItems = new ArrayList<>();
         List<String> appliedRules = new ArrayList<>();
