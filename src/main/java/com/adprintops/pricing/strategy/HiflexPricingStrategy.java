@@ -50,7 +50,12 @@ public class HiflexPricingStrategy implements PricingStrategy {
         BigDecimal baseRate;
 
         // 1. Calculate Base Rate & Fabric Cost with Small Sheet Tiers
-        if (activeSingleArea.compareTo(new BigDecimal("0.2")) < 0) {
+        BigDecimal smallPiecePrice = SmallPiecePricingMatrix.findPrice(width, height, quantity);
+        if (smallPiecePrice != null) {
+            tienVaiSingle = smallPiecePrice.divide(BigDecimal.valueOf(quantity), 0, RoundingMode.HALF_UP);
+            baseRate = tienVaiSingle;
+            appliedRules.add("HIFLEX_SMALL_PIECE_MATRIX");
+        } else if (activeSingleArea.compareTo(new BigDecimal("0.2")) < 0) {
             // Tấm nhỏ < 0.2m2 = 35.000đ khoán
             baseRate = new BigDecimal("35000");
             tienVaiSingle = new BigDecimal("35000");

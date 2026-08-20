@@ -42,6 +42,31 @@ public class DecalPricingStrategy implements PricingStrategy {
         BigDecimal realSingleArea = width.multiply(height).setScale(4, RoundingMode.HALF_UP);
         BigDecimal billableSingleArea = realSingleArea;
 
+        // Check small piece matrix lookup first (Decal = Lụa for small dimensions)
+        BigDecimal smallPiecePrice = SmallPiecePricingMatrix.findPrice(width, height, quantity);
+        if (smallPiecePrice != null) {
+            BigDecimal singleUnitPrice = smallPiecePrice.divide(BigDecimal.valueOf(quantity), 0, RoundingMode.HALF_UP);
+            BigDecimal laminationCost = BigDecimal.ZERO;
+            if (hasLamination) {
+                BigDecimal laminationFeeRate = new BigDecimal("50000");
+                laminationCost = realSingleArea.multiply(laminationFeeRate).setScale(0, RoundingMode.HALF_UP);
+            }
+            BigDecimal totalPrice = smallPiecePrice.add(laminationCost.multiply(BigDecimal.valueOf(quantity))).setScale(0, RoundingMode.HALF_UP);
+
+            List<LineItem> lineItems = new ArrayList<>();
+            List<String> appliedRules = new ArrayList<>();
+            appliedRules.add("DECAL_SMALL_PIECE_MATRIX");
+            lineItems.add(new LineItem("PRINT", "In Decal tấm nhỏ khoán (" + width + "m x " + height + "m)", smallPiecePrice));
+            if (hasLamination) {
+                lineItems.add(new LineItem("LAMINATION", "Phí cán màng (+50k/m²)", laminationCost.multiply(BigDecimal.valueOf(quantity))));
+            }
+            String note = "Decal in tấm nhỏ | Kích thước: " + width + "m x " + height + "m (" + quantity + " tấm @ " + totalPrice + "đ)";
+
+            return new CalculatePriceResponse(
+                    "DECAL", false, realSingleArea, realSingleArea.multiply(BigDecimal.valueOf(quantity)), new BigDecimal("120000"), laminationCost, singleUnitPrice, totalPrice, "VND", lineItems, appliedRules, note
+            );
+        }
+
         // Standard Decal print shop rolls: 0.9m, 1.0m, 1.07m, 1.27m, 1.52m
         BigDecimal matchedRoll = null;
         if (realSingleArea.compareTo(new BigDecimal("0.1")) >= 0) {
